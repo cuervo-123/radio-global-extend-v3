@@ -1,8 +1,0 @@
-Place all logo PNG files in this folder.
-
-Example:
-tv4you-streaming-core.png
-mundovision-jp-portal.png
-mitv-station-10-3-command.png
-radio-pro-studio.png
-etc...
