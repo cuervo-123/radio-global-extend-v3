@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Importador PRO + Carrusel de Favoritos + Mini PiP</title>
+    <style>
+    :root {
+        --bg: #0b1020;
+        --bg2: #121a31;
+        --card: #151f3a;
+        --muted: #95a8d6;
+        --text: #ecf3ff;
+        --line: rgba(255, 255, 255, .08);
+        --accent: #4a7bff;
+        --accent2: #ff4d6d;
+        --ok: #1fbf75;
+        --warn: #ffb84d;
+        --danger: #ff6b6b;
+        --shadow: 0 18px 50px rgba(0, 0, 0, .35);
+        --radius: 18px;
+    }
+
+    * {
+        box-sizing: border-box
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(180deg, #09101f, #0c1430 45%, #08101d);
+        color: var(--text);
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none
+    }
+
+    .wrap {
+        width: min(1280px, calc(100vw - 24px));
+        margin: 0 auto
+    }
+
+    .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(10, 14, 30, .88);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line)
+    }
+
+    .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px
+    }
+
+    .brand-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent), #75a0ff);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        box-shadow: var(--shadow)
+    }
+
+    .brand h1 {
+        margin: 0;
+        font-size: 18px
+    }
+
+    .brand p {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 12px
+    }
+
+    .top-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center
+    }
+
+    button, .btn {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: #253050;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        transition: .18s transform, .18s opacity, .18s background
+    }
+
+    button:hover, .btn:hover {
+        transform: translateY(-1px);
+        opacity: .96
+    }
+
+    .primary {
+        background: linear-gradient(135deg, var(--accent), #6a96ff)
+    }
+
+    .accent2 {
+        background: linear-gradient(135deg, var(--accent2), #ff7390)
+    }
+
+    .ghost {
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid var(--line)
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .08);
+        font-size: 13px;
+        color: #dce7ff
+    }
+
+    .section {
+        padding: 20px 0
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1.1fr .9fr;
+        gap: 18px
+    }
+
+    .panel {
+        background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .02));
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow)
+    }
+
+    .panel-head {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px
+    }
+
+    .panel-head h2 {
+        margin: 0;
+        font-size: 18px
+    }
+
+    .panel-head p {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: var(--muted)
+    }
+
+    .panel-body {
+        padding: 18px
+    }
+
+    .import-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px
+    }
+
+    .card-mini {
+        background: rgba(255, 255, 255, .04);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px
+    }
+
+    .card-mini h3 {
+        margin: 0 0 8px;
+        font-size: 15px
+    }
+
+    .card-mini p {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5
+    }
+
+    .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center
+    }
+
+    .input, .select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #0c1327;
+        color: #fff;
+        outline: none
+    }
+
+    .file-input {
+        display: none
+    }
+
+    .mode-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px
+    }
+
+    .mode-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: #0c1327;
+        border: 1px solid var(--line);
+        font-size: 13px
+    }
+
+    .mode-chip input {
+        accent-color: var(--accent)
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 16px
+    }
+
+    .stat {
+        padding: 12px;
+        border-radius: 16px;
+        background: #0c1327;
+        border: 1px solid var(--line)
+    }
+
+    .stat strong {
+        display: block;
+        font-size: 18px
+    }
+
+    .stat span {
+        font-size: 12px;
+        color: var(--muted)
+    }
+
+    .status {
+        display: none;
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-size: 13px
+    }
+
+    .status.show {
+        display: block
+    }
+
+    .status.ok {
+        background: rgba(31, 191, 117, .14);
+        color: #d8ffec;
+        border: 1px solid rgba(31, 191, 117, .28)
+    }
+
+    .status.err {
+        background: rgba(255, 107, 107, .14);
+        color: #ffe1e1;
+        border: 1px solid rgba(255, 107, 107, .28)
+    }
+
+    .carousel-wrap {
+        position: relative
+    }
+
+    .carousel {
+        display: flex;
+        gap: 14px;
+        overflow: auto;
+        scroll-behavior: smooth;
+        padding: 2px 2px 10px;
+        scrollbar-width: none
+    }
+
+    .carousel::-webkit-scrollbar {
+        display: none
+    }
+
+    .carousel-btn {
+        position: absolute;
+        top: 40%;
+        transform: translateY(-50%);
+        z-index: 2;
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        padding: 0;
+        background: rgba(7, 10, 20, .8);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--line)
+    }
+
+    .carousel-btn.left {
+        left: -8px
+    }
+
+    .carousel-btn.right {
+        right: -8px
+    }
+
+    .fav-card {
+        min-width: 220px;
+        max-width: 220px;
+        background: linear-gradient(180deg, #142042, #10182e);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        flex: 0 0 auto
+    }
+
+    .fav-poster {
+        height: 270px;
+        background: #1a2343 center/cover no-repeat;
+        position: relative
+    }
+
+    .tag {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, .55);
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 11px
+    }
+
+    .fav-info {
+        padding: 12px
+    }
+
+    .fav-title {
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.35;
+        min-height: 38px
+    }
+
+    .fav-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+        min-height: 34px
+    }
+
+    .fav-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px
+    }
+
+    .fav-actions a, .fav-actions button {
+        border-radius: 12px;
+        padding: 9px 10px;
+        font-size: 12px;
+        font-weight: 700
+    }
+
+    .fav-actions a {
+        background: var(--accent);
+        color: #fff
+    }
+
+    .fav-actions button {
+        background: #2a3559;
+        color: #fff
+    }
+
+    .empty {
+        padding: 22px;
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+        color: var(--muted);
+        text-align: center
+    }
+
+    .imported-toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px
+    }
+
+    .toolbar-left, .toolbar-right {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 14px
+    }
+
+    .media-card {
+        background: linear-gradient(180deg, #141e3b, #10182d);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: visible;
+        position: relative
+    }
+
+    .media-thumb {
+        height: 260px;
+        background: #1a2447 center/cover no-repeat;
+        position: relative;
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px
+    }
+
+    .fav-float {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        padding: 0;
+        background: rgba(5, 8, 18, .78);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, .12)
+    }
+
+    .fav-float.active {
+        background: linear-gradient(135deg, var(--accent2), #ff7894)
+    }
+
+    .media-body {
+        padding: 12px;
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px
+    }
+
+    .media-title {
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.35;
+        min-height: 38px
+    }
+
+    .media-sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+        min-height: 34px
+    }
+
+    .media-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px
+    }
+
+    .media-actions a, .media-actions button {
+        border-radius: 12px;
+        padding: 9px 10px;
+        font-size: 12px;
+        font-weight: 700
+    }
+
+    .media-actions a {
+        background: var(--accent);
+        color: #fff
+    }
+
+    .media-actions button {
+        background: #2a3559;
+        color: #fff
+    }
+
+    .mini-pip-trigger {
+        background: linear-gradient(135deg, #1fbf75, #2fd89a) !important
+    }
+
+    .footer-note {
+        font-size: 12px;
+        color: var(--muted);
+        padding: 14px 0 28px;
+        text-align: center
+    }
+
+    .mini-pip {
+        position: fixed;
+        z-index: 70;
+        width: min(380px, calc(100vw - 24px));
+        background: rgba(8, 12, 24, .97);
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 20px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, .55);
+        display: none;
+        overflow: hidden
+    }
+
+    .mini-pip.show {
+        display: block
+    }
+
+    .mini-pip-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .02))
+    }
+
+    .mini-pip-title {
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.3
+    }
+
+    .mini-pip-sub {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 3px
+    }
+
+    .mini-pip-close {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border-radius: 999px;
+        background: #2c385d
+    }
+
+    .mini-pip-media {
+        background: #050915;
+        aspect-ratio: 16/9;
+        display: grid;
+        place-items: center
+    }
+
+    .mini-pip-media video, .mini-pip-media iframe, .mini-pip-media audio {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #000
+    }
+
+    .mini-pip-media audio {
+        height: 64px
+    }
+
+    .mini-pip-placeholder {
+        padding: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5
+    }
+
+    .mini-pip-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 12px 14px
+    }
+
+    .mini-pip-actions a, .mini-pip-actions button {
+        border-radius: 12px;
+        padding: 9px 11px;
+        font-size: 12px;
+        font-weight: 800
+    }
+
+    .mini-pip-actions a {
+        background: var(--accent)
+    }
+
+    .mini-pip-actions button {
+        background: #2a3559
+    }
+
+    .fab-search {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 75;
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        padding: 0;
+        background: linear-gradient(135deg, var(--accent), #7ca4ff);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, .4);
+        font-size: 24px
+    }
+
+    .search-dock {
+        position: fixed;
+        right: 18px;
+        bottom: 88px;
+        z-index: 74;
+        width: min(420px, calc(100vw - 24px));
+        max-height: min(72vh, 680px);
+        background: rgba(7, 11, 22, .98);
+        border: 1px solid rgba(255, 255, 255, .11);
+        border-radius: 20px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, .5);
+        display: none;
+        overflow: hidden
+    }
+
+    .search-dock.show {
+        display: flex;
+        flex-direction: column
+    }
+
+    .search-head {
+        padding: 14px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 10px
+    }
+
+    .search-head input {
+        flex: 1
+    }
+
+    .search-close {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 999px;
+        background: #2c385d
+    }
+
+    .search-results {
+        overflow: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px
+    }
+
+    .search-item {
+        display: grid;
+        grid-template-columns: 70px 1fr;
+        gap: 12px;
+        padding: 10px;
+        border-radius: 16px;
+        background: #0f1730;
+        border: 1px solid rgba(255, 255, 255, .06)
+    }
+
+    .search-item-thumb {
+        width: 70px;
+        height: 96px;
+        border-radius: 12px;
+        background: #162246 center/cover no-repeat
+    }
+
+    .search-item-title {
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.3
+    }
+
+    .search-item-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+        line-height: 1.45
+    }
+
+    .search-item-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px
+    }
+
+    .search-item-actions button, .search-item-actions a {
+        padding: 8px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 800
+    }
+
+    .search-item-actions a {
+        background: var(--accent)
+    }
+
+    .search-empty {
+        padding: 22px;
+        text-align: center;
+        color: var(--muted)
+    }
+
+    .internal-config-card {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, .04);
+        border: 1px solid var(--line)
+    }
+
+    .internal-config-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px
+    }
+
+    .internal-config-grid .input {
+        width: 100%
+    }
+
+    .internal-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px
+    }
+
+    .internal-note {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45
+    }
+
+
+    .youtube-pro-card {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        background:
+            radial-gradient(circle at top left, rgba(255, 0, 80, .12), transparent 32%),
+            rgba(255, 255, 255, .04);
+        border: 1px solid rgba(255, 255, 255, .10)
+    }
+
+    .youtube-pro-card h3 {
+        margin: 0 0 8px;
+        font-size: 15px
+    }
+
+    .youtube-pro-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5
+    }
+
+    .youtube-pro-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr .7fr .7fr;
+        gap: 10px;
+        margin-top: 12px
+    }
+
+    .youtube-pro-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px
+    }
+
+    .youtube-mini-list {
+        margin-top: 10px;
+        max-height: 150px;
+        overflow: auto;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 14px;
+        padding: 10px;
+        background: rgba(7, 11, 22, .5);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5
+    }
+
+    .youtube-mini-list b { color: var(--text) }
+
+    @media (max-width: 980px) {
+        .youtube-pro-grid { grid-template-columns: 1fr 1fr }
+    }
+
+    @media (max-width: 720px) {
+        .youtube-pro-grid { grid-template-columns: 1fr }
+    }
+
+    .footer-admin-wrap {
+        padding: 0 22px 18px
+    }
+
+    .footer-admin-card {
+        border: 1px solid rgba(125, 211, 252, .16);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .02));
+        padding: 14px
+    }
+
+    .footer-admin-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px
+    }
+
+    .footer-admin-title {
+        font-size: 15px;
+        font-weight: 900;
+        color: #eef6ff
+    }
+
+    .footer-admin-sub {
+        font-size: 12px;
+        color: #9fc2ea
+    }
+
+    .footer-admin-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px
+    }
+
+    .footer-admin-grid .input {
+        background: rgba(7, 11, 22, .9)
+    }
+
+    .footer-admin-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px
+    }
+
+    .page-range-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .08);
+        font-size: 12px;
+        color: #dce7ff;
+        border: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    @media (max-width: 980px) {
+        .grid {
+            grid-template-columns:1fr
+        }
+
+        .stats {
+            grid-template-columns: repeat(2, 1fr)
+        }
+    }
+
+    @media (max-width: 720px) {
+        .topbar-inner {
+            align-items: flex-start;
+            flex-direction:column
+        }
+
+        .import-grid {
+            grid-template-columns:1fr
+        }
+
+        .stats {
+            grid-template-columns: 1fr 1fr
+        }
+
+        .cards {
+            grid-template-columns:1fr 1fr
+        }
+
+        .fav-card {
+            min-width: 190px;
+            max-width:190px
+        }
+
+        .fav-poster {
+            height: 240px
+        }
+
+        .mini-pip {
+            left: 12px !important;
+            right: 12px !important;
+            bottom: 12px !important;
+            top: auto !important;
+            width: auto
+        }
+    }
+
+    @media (max-width: 520px) {
+        .cards {
+            grid-template-columns:1fr
+        }
+
+        .stats {
+            grid-template-columns:1fr
+        }
+
+        .carousel-btn {
+            display: none
+        }
+    }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="wrap topbar-inner">
+            <div class="brand">
+                <div class="brand-badge">PRO</div>
+                <div>
+                    <h1>Importador PRO + Carrusel de Favoritos</h1>
+                    <p>Con Mini PiP rápido y lupa flotante conectada al preview.</p>
+                </div>
+            </div>
+            <div class="top-actions">
+                <span class="pill">
+                    Favoritos: 
+                    <strong id="favCount">0</strong>
+                </span>
+                <button class="accent2" id="addAllImportedBtn">❤ Agregar importados a favoritos</button>
+                <button class="ghost" id="exportFavsBtn">Exportar favoritos</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="section grid">
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Importador PRO</h2>
+                        <p>Importa listas M3U, M3U8 y JSON desde archivo o URL web.</p>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="import-grid">
+                        <div class="card-mini">
+                            <h3>Desde archivo</h3>
+                            <p>Selecciona una lista local y la procesamos automáticamente.</p>
+                            <div class="row">
+                                <label class="btn primary" for="fileInput">Seleccionar archivo</label>
+                                <input id="fileInput" class="file-input" type="file" accept=".m3u,.m3u8,.json,application/json,text/plain"/>
+                            </div>
+                        </div>
+                        <div class="card-mini">
+                            <h3>Desde URL web</h3>
+                            <p>Pega una URL directa. Si el servidor bloquea CORS, importa el archivo localmente.</p>
+                            <div class="row">
+                                <input id="urlInput" class="input" placeholder="https://ejemplo.com/lista.m3u"/>
+                                <button class="primary" id="importUrlBtn">Importar URL</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mode-row">
+                        <label class="mode-chip">
+                            <input type="radio" name="importMode" value="replace" checked>
+                             Replace
+                        </label>
+                        <label class="mode-chip">
+                            <input type="radio" name="importMode" value="add">
+                             Add
+                        </label>
+                        <label class="mode-chip">
+                            <input type="checkbox" id="dedupeToggle" checked>
+                             Quitar duplicados
+                        </label>
+                    </div>
+
+                    <div class="row" style="margin-top:14px">
+                        <button id="restoreBackupBtn">Restaurar backup</button>
+                        <button id="clearImportedBtn">Limpiar importados</button>
+                        <button id="exportImportedBtn">Exportar importados JSON</button>
+                    </div>
+
+                    <div class="internal-config-card">
+                        <h3 style="margin:0 0 8px;font-size:15px">CONFIG VIDEASY + METADATA LOCAL</h3>
+                        <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">Cada página puede tener su propio bloque interno. Aquí eliges desde qué ID hasta cuál cargar, con opción de cantidad automática.</p>
+                        <div class="internal-config-grid">
+                            <input id="pageStartInput" class="input" type="number" min="1" step="1" placeholder="Inicio"/>
+                            <input id="pageEndInput" class="input" type="number" min="1" step="1" placeholder="Fin"/>
+                            <input id="pageQtyInput" class="input" type="number" min="1" step="1" placeholder="Cantidad"/>
+                            <input id="accessPasswordInput" class="input" type="password" placeholder="Password admin"/>
+                        </div>
+                        <div class="internal-actions">
+                            <button id="applyPageRangeBtn" class="primary">Aplicar rango a esta page</button>
+                            <button id="loadInternalBtn">Ver canales internos</button>
+                            <button id="regenInternalBtn">Regenerar internos</button>
+                            <button id="importMetaBtn" class="ghost">Importar metadata .json</button>
+                            <button id="exportPageConfigBtn" class="ghost">Exportar config</button>
+                        </div>
+                        <div class="internal-note" id="pageRangeNote">Esta página usará su configuración propia.</div>
+                    </div>
+
+                    <div class="youtube-pro-card">
+                        <h3>🎵 YOUTUBE FAVORITES BUILDER</h3>
+                        <p>Carga un JSON con nombres de tus temas favoritos. El app busca en YouTube, crea tarjetas con imagen y link, y reproduce en Mini PiP cuando YouTube permite embed.</p>
+                        <div class="youtube-pro-grid">
+                            <input id="youtubeApiKeyInput" class="input" type="password" placeholder="YouTube API Key (opcional pero recomendado)"/>
+                            <input id="youtubeSingleQueryInput" class="input" placeholder="Buscar un tema manualmente: artista - canción"/>
+                            <input id="youtubeLimitInput" class="input" type="number" min="1" max="50" value="20" placeholder="Límite"/>
+                            <input id="youtubeRegionInput" class="input" value="US" placeholder="Región: US, CO, etc."/>
+                        </div>
+                        <div class="youtube-pro-actions">
+                            <label class="btn primary" for="youtubeJsonInput">📂 Cargar JSON de temas</label>
+                            <input id="youtubeJsonInput" class="file-input" type="file" accept=".json,application/json,text/plain"/>
+                            <button id="youtubeSearchOneBtn" class="primary">🔎 Buscar tema</button>
+                            <button id="youtubeGenerateBtn">⚡ Generar tarjetas YouTube</button>
+                            <button id="youtubeExportBtn" class="ghost">Exportar YouTube JSON</button>
+                            <button id="youtubeSelectAllBtn" class="ghost">✅ Marcar todos</button>
+                            <button id="youtubeSelectNoneBtn" class="ghost">⬜ Desmarcar todos</button>
+                            <button id="youtubeClearQueueBtn" class="ghost">Limpiar cola</button>
+                        </div>
+                        <div class="internal-note">Formato JSON permitido: <b>["Marc Anthony Vivir Mi Vida", "Grupo Niche Cali Pachanguero"]</b> o <b>[{"title":"..."}]</b>. Sin API key se crean tarjetas de búsqueda; con API key busca el primer video real.</div>
+                        <div id="youtubeQueuePreview" class="youtube-mini-list">Cola YouTube vacía.</div>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <strong id="statItems">0</strong>
+                            <span>Items importados</span>
+                        </div>
+                        <div class="stat">
+                            <strong id="statFavs">0</strong>
+                            <span>Favoritos</span>
+                        </div>
+                        <div class="stat">
+                            <strong id="statCats">0</strong>
+                            <span>Categorías</span>
+                        </div>
+                        <div class="stat">
+                            <strong id="statMode">Replace</strong>
+                            <span>Modo actual</span>
+                        </div>
+                    </div>
+
+                    <div id="statusBox" class="status"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Carrusel de Favoritos</h2>
+                        <p>Solo tus favoritos, en formato visual horizontal.</p>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="carousel-wrap">
+                        <button class="carousel-btn left" id="favLeftBtn">‹</button>
+                        <div id="favoritesCarousel" class="carousel"></div>
+                        <button class="carousel-btn right" id="favRightBtn">›</button>
+                    </div>
+                    <div id="favoritesEmpty" class="empty">Todavía no tienes favoritos. Importa una lista y toca el botón ❤.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Contenido importado</h2>
+                        <p>Tarjetas importadas con Abrir, Favorito y Mini PiP.</p>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="imported-toolbar">
+                        <div class="toolbar-left">
+                            <input id="searchInput" class="input" style="width:min(340px,100%)" placeholder="Buscar dentro de importados..."/>
+                        </div>
+                        <div class="toolbar-right">
+                            <span class="pill" id="summaryPill">0 items visibles</span>
+                        </div>
+                    </div>
+                    <div id="importedGrid" class="cards"></div>
+                    <div id="importedEmpty" class="empty">No hay contenido importado todavía.</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer-note">Versión depurada: Importador PRO + Carrusel de Favoritos + Mini PiP + Lupa flotante.</div>
+    </main>
+
+    <div id="miniPip" class="mini-pip" aria-live="polite">
+        <div class="mini-pip-head">
+            <div>
+                <div id="miniPipTitle" class="mini-pip-title">Mini PiP</div>
+                <div id="miniPipSub" class="mini-pip-sub">Vista rápida del contenido</div>
+            </div>
+            <button id="miniPipClose" class="mini-pip-close">✕</button>
+        </div>
+        <div id="miniPipMedia" class="mini-pip-media">
+            <div class="mini-pip-placeholder">Selecciona “Mini PiP” en una tarjeta importada o desde la lupa flotante.</div>
+        </div>
+        <div class="mini-pip-actions">
+            <a id="miniPipOpenLink" href="#" target="_blank" rel="noopener">Abrir completo</a>
+            <button id="miniPipFavBtn">❤ Favorito</button>
+        </div>
+    </div>
+
+    <button id="searchFab" class="fab-search" title="Buscar">🔎</button>
+    <div id="searchDock" class="search-dock">
+        <div class="search-head">
+            <input id="floatingSearchInput" class="input" placeholder="Buscar película, canal o categoría..."/>
+            <button id="searchDockClose" class="search-close">✕</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <script>
+    const PAGE_ID = (location.pathname.split('/').pop() || 'page-1.html').toLowerCase();
+    const ACCESS_PASSWORD = 'jamesp123'; // 👈 cámbialo aquí antes de publicar
+    const VIDEASY_BASE_URL = 'https://player.videasy.net/movie/';
+    const DEFAULT_PAGE_RANGE = {
+        start: 100,
+        quantity: 2000
+    };
+    DEFAULT_PAGE_RANGE.end = DEFAULT_PAGE_RANGE.start + DEFAULT_PAGE_RANGE.quantity - 1;
+
+    const STORAGE_KEYS = {
+        imported: `gomovies_pro_imported_only:${PAGE_ID}`,
+        backup: `gomovies_pro_backup_only:${PAGE_ID}`,
+        favorites: 'gomovies_pro_favorites_only',
+        customEdits: `gomovies_pro_custom_edits:${PAGE_ID}`,
+        internalMeta: 'videasyMetadata',
+        pageRange: `videasy_page_range:${PAGE_ID}`,
+        internalDB: `internalDatabase:${PAGE_ID}`,
+        accessSession: `videasy_access_ok:${PAGE_ID}`,
+        youtubeQueue: `youtube_favorites_queue:${PAGE_ID}`,
+        youtubeResults: `youtube_favorites_results:${PAGE_ID}`,
+        youtubeApiKey: 'youtube_api_key_local'
+    };
+
+    let importedItems = readJson(STORAGE_KEYS.imported, []);
+    let favorites = readJson(STORAGE_KEYS.favorites, []);
+    let filteredItems = [...importedItems];
+    let currentPipItem = null;
+    let currentPipAnchor = null;
+    let plutoCustomDB = readJson(STORAGE_KEYS.customEdits, {});
+
+    const fileInput = document.getElementById('fileInput');
+    const urlInput = document.getElementById('urlInput');
+    const importUrlBtn = document.getElementById('importUrlBtn');
+    const restoreBackupBtn = document.getElementById('restoreBackupBtn');
+    const clearImportedBtn = document.getElementById('clearImportedBtn');
+    const exportImportedBtn = document.getElementById('exportImportedBtn');
+    const addAllImportedBtn = document.getElementById('addAllImportedBtn');
+    const exportFavsBtn = document.getElementById('exportFavsBtn');
+    const importedGrid = document.getElementById('importedGrid');
+    const importedEmpty = document.getElementById('importedEmpty');
+    const favoritesCarousel = document.getElementById('favoritesCarousel');
+    const favoritesEmpty = document.getElementById('favoritesEmpty');
+    const statusBox = document.getElementById('statusBox');
+    const favCount = document.getElementById('favCount');
+    const statItems = document.getElementById('statItems');
+    const statFavs = document.getElementById('statFavs');
+    const statCats = document.getElementById('statCats');
+    const statMode = document.getElementById('statMode');
+    const summaryPill = document.getElementById('summaryPill');
+    const searchInput = document.getElementById('searchInput');
+    const dedupeToggle = document.getElementById('dedupeToggle');
+    const favLeftBtn = document.getElementById('favLeftBtn');
+    const favRightBtn = document.getElementById('favRightBtn');
+
+    const miniPip = document.getElementById('miniPip');
+    const miniPipTitle = document.getElementById('miniPipTitle');
+    const miniPipSub = document.getElementById('miniPipSub');
+    const miniPipMedia = document.getElementById('miniPipMedia');
+    const miniPipClose = document.getElementById('miniPipClose');
+    const miniPipOpenLink = document.getElementById('miniPipOpenLink');
+    const miniPipFavBtn = document.getElementById('miniPipFavBtn');
+
+    const searchFab = document.getElementById('searchFab');
+    const searchDock = document.getElementById('searchDock');
+    const searchDockClose = document.getElementById('searchDockClose');
+    const floatingSearchInput = document.getElementById('floatingSearchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    const pageStartInput = document.getElementById('pageStartInput');
+    const pageEndInput = document.getElementById('pageEndInput');
+    const pageQtyInput = document.getElementById('pageQtyInput');
+    const accessPasswordInput = document.getElementById('accessPasswordInput');
+    const applyPageRangeBtn = document.getElementById('applyPageRangeBtn');
+    const loadInternalBtn = document.getElementById('loadInternalBtn');
+    const regenInternalBtn = document.getElementById('regenInternalBtn');
+    const importMetaBtn = document.getElementById('importMetaBtn');
+    const exportPageConfigBtn = document.getElementById('exportPageConfigBtn');
+    const pageRangeNote = document.getElementById('pageRangeNote');
+    const youtubeApiKeyInput = document.getElementById('youtubeApiKeyInput');
+    const youtubeSingleQueryInput = document.getElementById('youtubeSingleQueryInput');
+    const youtubeLimitInput = document.getElementById('youtubeLimitInput');
+    const youtubeRegionInput = document.getElementById('youtubeRegionInput');
+    const youtubeJsonInput = document.getElementById('youtubeJsonInput');
+    const youtubeSearchOneBtn = document.getElementById('youtubeSearchOneBtn');
+    const youtubeGenerateBtn = document.getElementById('youtubeGenerateBtn');
+    const youtubeExportBtn = document.getElementById('youtubeExportBtn');
+    const youtubeClearQueueBtn = document.getElementById('youtubeClearQueueBtn');
+    const youtubeSelectAllBtn = document.getElementById('youtubeSelectAllBtn');
+    const youtubeSelectNoneBtn = document.getElementById('youtubeSelectNoneBtn');
+    const youtubeQueuePreview = document.getElementById('youtubeQueuePreview');
+    const footerStartInput = document.getElementById('footerStartInput');
+    const footerEndInput = document.getElementById('footerEndInput');
+    const footerQtyInput = document.getElementById('footerQtyInput');
+    const footerPasswordInput = document.getElementById('footerPasswordInput');
+    const footerApplyRangeBtn = document.getElementById('footerApplyRangeBtn');
+    const footerLoadInternalBtn = document.getElementById('footerLoadInternalBtn');
+    const footerRegenBtn = document.getElementById('footerRegenBtn');
+    const footerCurrentRange = document.getElementById('footerCurrentRange');
+
+    function readJson(key, fallback) {
+        try {
+            const v = localStorage.getItem(key);
+            return v ? JSON.parse(v) : fallback;
+        } catch {
+            return fallback;
+        }
+    }
+    function writeJson(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    }
+    function getMode() {
+        return document.querySelector('input[name="importMode"]:checked')?.value || 'replace';
+    }
+    function showStatus(msg, type='ok') {
+        statusBox.textContent = msg;
+        statusBox.className = 'status show ' + (type === 'err' ? 'err' : 'ok');
+    }
+    function hideStatus() {
+        statusBox.className = 'status';
+    }
+    function slug(text='') {
+        return String(text).toLowerCase().trim();
+    }
+    function safeFilename(name) {
+        return name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'lista';
+    }
+    function uniqueBy(items) {
+        const seen = new Set();
+        return items.filter(item => {
+            const key = `${slug(item.title)}|${slug(item.url)}|${slug(item.image)}`;
+            if (seen.has(key))
+                return false;
+            seen.add(key);
+            return true;
+        });
+    }
+    function normalizeItem(raw={}, source='importado') {
+        const title = raw.title || raw.name || raw.label || raw.tvgName || raw.channel || raw.movie || 'Sin título';
+        const url = raw.url || raw.link || raw.src || raw.file || raw.stream || raw.play || '#';
+        const image = raw.image || raw.logo || raw.poster || raw.thumb || raw.thumbnail || raw.tvgLogo || raw.icon || '';
+        const category = raw.category || raw.group || raw.groupTitle || raw.genre || raw.type || 'Sin categoría';
+        const description = raw.description || raw.desc || raw.plot || raw.cast || raw.info || '';
+        return {
+            id: raw.id || `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+            title,
+            url,
+            image,
+            category,
+            description,
+            source: raw.source || source,
+            youtubeVideoId: raw.youtubeVideoId || raw.videoId || ''
+        };
+    }
+    function parseM3U(content, source='m3u') {
+        const lines = content.split(/\r?\n/);
+        const result = [];
+        let meta = null;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line)
+                continue;
+            if (line.startsWith('#EXTINF')) {
+                const title = line.includes(',') ? line.split(',').slice(1).join(',').trim() : 'Sin título';
+                const tvgLogo = (line.match(/tvg-logo="([^"]+)"/i) || [, ''])[1];
+                const groupTitle = (line.match(/group-title="([^"]+)"/i) || [, ''])[1];
+                meta = {
+                    title,
+                    image: tvgLogo,
+                    category: groupTitle || 'M3U',
+                    source
+                };
+            } else if (!line.startsWith('#')) {
+                result.push(normalizeItem({
+                    ...(meta || {}),
+                    url: line
+                }, source));
+                meta = null;
+            }
+        }
+        return result;
+    }
+    function parseJSONContent(text, source='json') {
+        const parsed = JSON.parse(text);
+        let arr = [];
+        if (Array.isArray(parsed))
+            arr = parsed;
+        else if (Array.isArray(parsed.channels))
+            arr = parsed.channels;
+        else if (Array.isArray(parsed.items))
+            arr = parsed.items;
+        else if (Array.isArray(parsed.list))
+            arr = parsed.list;
+        else if (Array.isArray(parsed.results))
+            arr = parsed.results;
+        else if (Array.isArray(parsed.data))
+            arr = parsed.data;
+        else
+            arr = [parsed];
+        return arr.map(item => normalizeItem(item, source));
+    }
+    function mergeImported(newItems) {
+        writeJson(STORAGE_KEYS.backup, importedItems);
+        const mode = getMode();
+        statMode.textContent = mode === 'add' ? 'Add' : 'Replace';
+        let merged = mode === 'add' ? importedItems.concat(newItems) : [...newItems];
+        if (dedupeToggle.checked)
+            merged = uniqueBy(merged);
+        importedItems = merged;
+        writeJson(STORAGE_KEYS.imported, importedItems);
+        applySearch();
+        renderAll();
+    }
+    function restoreBackup() {
+        const backup = readJson(STORAGE_KEYS.backup, null);
+        if (!backup) {
+            showStatus('No hay backup para restaurar.', 'err');
+            return;
+        }
+        importedItems = backup;
+        writeJson(STORAGE_KEYS.imported, importedItems);
+        applySearch();
+        renderAll();
+        showStatus('Backup restaurado correctamente.');
+    }
+    function clearImported() {
+        writeJson(STORAGE_KEYS.backup, importedItems);
+        importedItems = [];
+        writeJson(STORAGE_KEYS.imported, importedItems);
+        applySearch();
+        renderAll();
+        closeMiniPip();
+        showStatus('Importados limpiados. Puedes restaurarlos con Backup.');
+    }
+    function exportJSON(data, filename) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: 'application/json'
+        });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+    function toggleFavorite(item) {
+        const idx = favorites.findIndex(f => f.url === item.url && f.title === item.title);
+        if (idx >= 0)
+            favorites.splice(idx, 1);
+        else
+            favorites.unshift(normalizeItem(item, item.source || 'favorito'));
+        favorites = uniqueBy(favorites);
+        writeJson(STORAGE_KEYS.favorites, favorites);
+        renderAll();
+        if (currentPipItem && currentPipItem.url === item.url && currentPipItem.title === item.title) {
+            updateMiniPipFavoriteState(currentPipItem);
+        }
+    }
+    function isFavorite(item) {
+        return favorites.some(f => f.url === item.url && f.title === item.title);
+    }
+    function addAllImportedToFavorites() {
+        if (!importedItems.length) {
+            showStatus('No hay importados para agregar.', 'err');
+            return;
+        }
+        favorites = uniqueBy([...favorites, ...importedItems.map(item => normalizeItem(item, item.source || 'importado'))]);
+        writeJson(STORAGE_KEYS.favorites, favorites);
+        renderAll();
+        showStatus('Todos los importados se agregaron a favoritos.');
+    }
+    function removeFavorite(item) {
+        favorites = favorites.filter(f => !(f.url === item.url && f.title === item.title));
+        writeJson(STORAGE_KEYS.favorites, favorites);
+        renderAll();
+        if (currentPipItem && currentPipItem.url === item.url && currentPipItem.title === item.title) {
+            updateMiniPipFavoriteState(currentPipItem);
+        }
+    }
+    function applySearch() {
+        const q = slug(searchInput.value || '');
+        filteredItems = !q ? [...importedItems] : importedItems.filter(item => {
+            return [getDisplayTitle(item), getDisplayCategory(item), getDisplayDescription(item), getResolvedOpenUrl(item), getResolvedPlaybackUrl(item), item.url].some(v => slug(v).includes(q));
+        });
+    }
+    function isPlutoUrl(url='') {
+        const u = String(url || '').toLowerCase();
+        return u.includes('pluto.tv');
+    }
+    function getPlutoPlatformUrl(itemOrUrl='') {
+        const raw = typeof itemOrUrl === 'string' ? itemOrUrl : (itemOrUrl?.url || '');
+        const u = String(raw || '').trim();
+        if (!u)
+            return 'https://pluto.tv/';
+        const lower = u.toLowerCase();
+        if (lower.includes('pluto.tv/es/live-tv/') || lower.includes('pluto.tv/live-tv/') || lower.includes('pluto.tv/on-demand/'))
+            return u;
+        const liveMatch = u.match(/pluto\.tv\/(?:[^\/?#]+\/)?live-tv\/([^?#]+)/i);
+        if (liveMatch)
+            return `https://pluto.tv/live-tv/${liveMatch[1]}`;
+        const onDemandMatch = u.match(/pluto\.tv\/(?:[^\/?#]+\/)?on-demand\/([^?#]+)/i);
+        if (onDemandMatch)
+            return `https://pluto.tv/on-demand/${onDemandMatch[1]}`;
+        const slugFromPath = u.match(/pluto\.tv\/(?:[^\/?#]+\/)?([^?#]+)/i);
+        if (slugFromPath && slugFromPath[1] && !slugFromPath[1].includes('.'))
+            return `https://pluto.tv/${slugFromPath[1].replace(/^\/+/, '')}`;
+        return 'https://pluto.tv/';
+    }
+    function getPlutoCustom(item) {
+        if (!item?.id)
+            return null;
+        return plutoCustomDB[item.id] || null;
+    }
+    function getDisplayTitle(item) {
+        return getPlutoCustom(item)?.title||item?.title || 'Sin título';
+    }
+    function getDisplayImage(item) {
+        return getPlutoCustom(item)?.image||item?.image || '';
+    }
+    function getDisplayCategory(item) {
+        return getPlutoCustom(item)?.category||item?.category || 'Sin categoría';
+    }
+    function getDisplayDescription(item) {
+        return getPlutoCustom(item)?.description||item?.description||item?.source || 'Importado';
+    }
+    function itemHasPlutoCustom(item) {
+        const custom = getPlutoCustom(item);
+        return !!(custom && Object.values(custom).some(v => String(v || '').trim()));
+    }
+    function getCustomBadge(item) {
+        if (!itemHasPlutoCustom(item))
+            return '';
+        return isPlutoUrl(item?.url) ? 'Pluto Custom' : 'Editado';
+    }
+    function savePlutoCustomDB() {
+        writeJson(STORAGE_KEYS.customEdits, plutoCustomDB);
+    }
+    function getResolvedOpenUrl(item) {
+        const custom = getPlutoCustom(item);
+        if(custom?.openUrl)
+            return custom.openUrl;
+        if(custom?.plutoUrl)
+            return custom.plutoUrl;
+        return isPlutoUrl(item?.url) ? getPlutoPlatformUrl(item) : (item?.url || '#');
+    }
+    function getResolvedPlaybackUrl(item) {
+        const custom = getPlutoCustom(item);
+        if(custom?.miniPipUrl)
+            return custom.miniPipUrl;
+        if(custom?.streamUrl)
+            return custom.streamUrl;
+        if(custom?.openUrl)
+            return custom.openUrl;
+        if(custom?.plutoUrl)
+            return custom.plutoUrl;
+        return item?.url || '#';
+    }
+    function editPlutoItem(item) {
+        const current = getPlutoCustom(item) || {};
+        const currentTitle = current.title || item.title || '';
+        const currentOpen = current.openUrl || current.plutoUrl || (isPlutoUrl(item.url) ? getPlutoPlatformUrl(item) : (item.url || ''));
+        const currentMini = current.miniPipUrl || current.streamUrl || '';
+        const currentImage = current.image || item.image || '';
+        const currentCategory = current.category || item.category || '';
+        const currentDesc = current.description || item.description || '';
+
+        const title = window.prompt(`Título para "${item.title}":`, currentTitle);
+        if (title === null)
+            return;
+        const openUrl = window.prompt(`Link principal / Abrir para "${title || item.title}":`, currentOpen);
+        if (openUrl === null)
+            return;
+        const miniPipUrl = window.prompt(`Link para Mini PiP (opcional) de "${title || item.title}":`, currentMini);
+        if (miniPipUrl === null)
+            return;
+        const image = window.prompt(`Logo o poster (opcional) para "${title || item.title}":`, currentImage);
+        if (image === null)
+            return;
+        const category = window.prompt(`Categoría / grupo (opcional) para "${title || item.title}":`, currentCategory);
+        if (category === null)
+            return;
+        const description = window.prompt(`Descripción (opcional) para "${title || item.title}":`, currentDesc);
+        if (description === null)
+            return;
+
+        const payload = {
+            title: String(title || '').trim(),
+            openUrl: String(openUrl || '').trim(),
+            miniPipUrl: String(miniPipUrl || '').trim(),
+            image: String(image || '').trim(),
+            category: String(category || '').trim(),
+            description: String(description || '').trim()
+        };
+
+        const hasValue = Object.values(payload).some(v => String(v || '').trim());
+        if (hasValue)
+            plutoCustomDB[item.id] = payload;
+        else
+            delete plutoCustomDB[item.id];
+
+        savePlutoCustomDB();
+        renderAll();
+        showStatus(`Editor actualizado: ${title || item.title}`);
+    }
+    function clearPlutoItemEdit(item) {
+        if (!plutoCustomDB[item.id])
+            return;
+        delete plutoCustomDB[item.id];
+        savePlutoCustomDB();
+        renderAll();
+        showStatus(`Se restauró el contenido original de: ${item.title}`);
+    }
+    function openItemTarget(item) {
+        const targetUrl = getResolvedOpenUrl(item);
+        if (targetUrl && targetUrl !== '#')
+            window.open(targetUrl, '_blank', 'noopener');
+    }
+    function detectMediaType(url='') {
+        const u = String(url).toLowerCase();
+        if (/\.(m3u8)(\?|#|$)/.test(u))
+            return 'hls';
+        if (/\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/.test(u))
+            return 'video';
+        if (/\.(mp3|aac|wav|m4a)(\?|#|$)/.test(u))
+            return 'audio';
+        if (u.includes('youtube.com/watch?v=') || u.includes('youtube.com/shorts/'))
+            return 'youtube';
+        if (u.includes('youtu.be/'))
+            return 'youtube';
+        if (u.includes('youtube.com/embed/') || u.includes('youtube-nocookie.com/embed/'))
+            return 'youtube-embed';
+        return 'iframe';
+    }
+    function getYoutubeEmbed(url='') {
+        const id = extractYoutubeId(url);
+        return id ? youtubeEmbedUrl(id) : String(url || '');
+    }
+    function renderMiniPipMedia(item) {
+        const playbackUrl = getResolvedPlaybackUrl(item);
+        if (isPlutoUrl(playbackUrl)) {
+            const plutoUrl = getResolvedOpenUrl(item);
+            miniPipMedia.innerHTML = `
+          <div class="mini-pip-placeholder" style="gap:12px">
+            <div style="font-size:34px">📺</div>
+            <div style="font-weight:800">Canal de Pluto detectado</div>
+            <div style="text-align:center;max-width:320px">Pluto suele bloquear reproducción directa fuera de su plataforma. Puedes abrirlo en Pluto cuando tú decidas.</div>
+            <a class="btn primary" href="${
+
+
+
+            escapeAttr(plutoUrl)}" target="_blank" rel="noopener">Abrir en Pluto</a>
+          </div>`
+            ;
+            return;
+        }
+        const type = detectMediaType(playbackUrl);
+        if (type === 'video' || type === 'hls') {
+            miniPipMedia.innerHTML = `<video src="${escapeAttr(playbackUrl)}" controls autoplay muted playsinline></video>`;
+        } else if (type === 'audio') {
+            miniPipMedia.innerHTML = `<audio src="${escapeAttr(playbackUrl)}" controls autoplay></audio>`;
+        } else {
+            const youtubeId = (item && item.youtubeVideoId) || extractYoutubeId(playbackUrl);
+            if (type.startsWith('youtube') || youtubeId) {
+                if (!youtubeId) {
+                    miniPipMedia.innerHTML = `
+                      <div class="mini-pip-placeholder" style="text-align:center">
+                        <div style="font-size:34px">▶️</div>
+                        <div style="font-weight:900;margin-bottom:8px">Este resultado es una búsqueda de YouTube</div>
+                        <div>No hay video ID directo para embeber. Usa “Abrir completo” para escoger el video.</div>
+                      </div>`;
+                    return;
+                }
+                const src = youtubeEmbedUrl(youtubeId);
+                miniPipMedia.innerHTML = `<iframe src="${escapeAttr(src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+                return;
+            }
+            miniPipMedia.innerHTML = `<iframe src="${escapeAttr(playbackUrl)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>`;
+        }
+    }
+    function updateMiniPipFavoriteState(item) {
+        miniPipFavBtn.textContent = isFavorite(item) ? '❤ Quitar favorito' : '❤ Agregar favorito';
+    }
+    function positionMiniPip(anchor) {
+        if (!anchor || window.innerWidth <= 720) {
+            miniPip.style.left = '';
+            miniPip.style.top = '';
+            miniPip.style.right = '12px';
+            miniPip.style.bottom = '12px';
+            return;
+        }
+        const rect = anchor.getBoundingClientRect();
+        const pipW = Math.min(380, window.innerWidth - 24);
+        let left = rect.right + 12;
+        let top = rect.top;
+        if (left + pipW > window.innerWidth - 12) {
+            left = rect.left - pipW - 12;
+        }
+        if (left < 12)
+            left = 12;
+        const maxTop = window.innerHeight - 320;
+        if (top > maxTop)
+            top = Math.max(12, maxTop);
+        if (top < 12)
+            top = 12;
+        miniPip.style.left = `${left}px`;
+        miniPip.style.top = `${top}px`;
+        miniPip.style.right = 'auto';
+        miniPip.style.bottom = 'auto';
+    }
+    function openMiniPip(item, anchor) {
+        currentPipItem = item;
+        currentPipAnchor = anchor || null;
+        miniPipTitle.textContent = getDisplayTitle(item);
+        miniPipSub.textContent = `${getDisplayCategory(item)} · ${item.source || 'Importado'}`;
+        miniPipOpenLink.href = getResolvedOpenUrl(item);
+        miniPipOpenLink.textContent = isPlutoUrl(getResolvedOpenUrl(item)) ? 'Abrir en Pluto' : 'Abrir completo';
+        updateMiniPipFavoriteState(item);
+        renderMiniPipMedia(item);
+        miniPip.classList.add('show');
+        positionMiniPip(anchor);
+    }
+    function closeMiniPip() {
+        currentPipItem = null;
+        currentPipAnchor = null;
+        miniPip.classList.remove('show');
+        miniPipMedia.innerHTML = `<div class="mini-pip-placeholder">Selecciona “Mini PiP” en una tarjeta importada o desde la lupa flotante.</div>`;
+    }
+
+    function renderImported() {
+        importedGrid.innerHTML = '';
+        importedEmpty.style.display = filteredItems.length ? 'none' : 'block';
+        summaryPill.textContent = `${filteredItems.length} items visibles`;
+        filteredItems.forEach(item => {
+            const article = document.createElement('article');
+            article.className = 'media-card';
+            article.dataset.title = getDisplayTitle(item);
+            article.innerHTML = `
+          <div class="media-thumb" style="background-image:url('${escapeAttr(getDisplayImage(item))}')">
+            <span class="tag">${escapeHtml(getDisplayCategory(item))}</span>
+            <button class="fav-float ${isFavorite(item) ? 'active' : ''}" title="Favorito">❤</button>
+          </div>
+          <div class="media-body">
+            <div class="media-title">${
+
+            escapeHtml(getDisplayTitle(item))} ${itemHasPlutoCustom(item) ? `<span class="tag" style="margin-left:6px;background:rgba(31,191,117,.18);border-color:rgba(31,191,117,.35)">${getCustomBadge(item)}</span>` : ''}</div>
+            <div class="media-sub">${escapeHtml(getDisplayDescription(item))}</div>
+            <div class="media-actions">
+              <a href="${
+            escapeAttr(getResolvedOpenUrl(item))}" target="_blank" rel="noopener">${isPlutoUrl(item.url) ? 'Abrir en Pluto' : 'Abrir'}</a>
+              <button type="button" class="fav-toggle">${isFavorite(item) ? 'Quitar favorito' : 'Agregar favorito'}</button>
+              <button type="button" class="mini-pip-trigger">Mini PiP</button>
+              ${
+            isPlutoUrl(item.url) ? '<button type="button" class="pluto-trigger">📺 Pluto</button>' : ''}<button type="button" class="pluto-edit-trigger">✏️ Editar</button>
+            </div>
+          </div>`
+
+            ;
+            article.querySelector('.fav-float').onclick = () => toggleFavorite(item);
+            article.querySelector('.fav-toggle').onclick = () => toggleFavorite(item);
+            article.querySelector('.mini-pip-trigger').onclick = () => openMiniPip(item, article);
+            const plutoTrigger = article.querySelector('.pluto-trigger');
+            if (plutoTrigger)
+                plutoTrigger.onclick = () => openItemTarget(item);
+            const plutoEditTrigger = article.querySelector('.pluto-edit-trigger');
+            if (plutoEditTrigger)
+                plutoEditTrigger.onclick = () => editPlutoItem(item);
+            importedGrid.appendChild(article);
+        });
+    }
+    function renderFavorites() {
+        favoritesCarousel.innerHTML = '';
+        favoritesEmpty.style.display = favorites.length ? 'none' : 'block';
+        favorites.forEach(item => {
+            const article = document.createElement('article');
+            article.className = 'fav-card';
+            article.innerHTML = `
+          <div class="fav-poster" style="background-image:url('${escapeAttr(getDisplayImage(item))}')">
+            <span class="tag">${escapeHtml(getDisplayCategory(item) || 'Favorito')}</span>
+          </div>
+          <div class="fav-info">
+            <div class="fav-title">${
+
+            escapeHtml(getDisplayTitle(item))} ${itemHasPlutoCustom(item) ? `<span class="tag" style="margin-left:6px;background:rgba(31,191,117,.18);border-color:rgba(31,191,117,.35)">${getCustomBadge(item)}</span>` : ''}</div>
+            <div class="fav-meta">${escapeHtml(getDisplayDescription(item) || 'Favorito guardado')}</div>
+            <div class="fav-actions">
+              <a href="${
+            escapeAttr(getResolvedOpenUrl(item))}" target="_blank" rel="noopener">${isPlutoUrl(item.url) ? 'Abrir en Pluto' : 'Abrir'}</a>
+              ${isPlutoUrl(item.url) ? '<button type="button" class="pluto-fav">📺 Pluto</button>' : ''}<button type="button" class="pluto-fav-edit">✏️ Editar</button>
+              <button type="button" class="remove-fav">Quitar</button>
+            </div>
+          </div>`
+
+
+            ;
+            const plutoFav = article.querySelector('.pluto-fav');
+            if (plutoFav)
+                plutoFav.onclick = () => openItemTarget(item);
+            const plutoFavEdit = article.querySelector('.pluto-fav-edit');
+            if (plutoFavEdit)
+                plutoFavEdit.onclick = () => editPlutoItem(item);
+            article.querySelector('.remove-fav').onclick = () => removeFavorite(item);
+            favoritesCarousel.appendChild(article);
+        });
+    }
+    function updateStats() {
+        const categories = new Set(importedItems.map(i => getDisplayCategory(i) || 'Sin categoría'));
+        favCount.textContent = favorites.length;
+        statItems.textContent = importedItems.length;
+        statFavs.textContent = favorites.length;
+        statCats.textContent = categories.size;
+        statMode.textContent = getMode() === 'add' ? 'Add' : 'Replace';
+    }
+    function renderAll() {
+        applySearch();
+        renderImported();
+        renderFavorites();
+        updateStats();
+        renderFloatingSearchResults();
+        if (currentPipItem) {
+            const fresh = importedItems.find(i => i.url === currentPipItem.url && i.title === currentPipItem.title) || favorites.find(i => i.url === currentPipItem.url && i.title === currentPipItem.title);
+            if (fresh) {
+                currentPipItem = fresh;
+                updateMiniPipFavoriteState(fresh);
+            }
+        }
+    }
+    function escapeHtml(value='') {
+        return String(value).replace(/[&<>"']/g, m => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m]));
+    }
+    function escapeAttr(value='') {
+        return String(value || '').replace(/'/g, '%27');
+    }
+
+    function toggleSearchDock(force) {
+        const open = typeof force === 'boolean' ? force : !searchDock.classList.contains('show');
+        searchDock.classList.toggle('show', open);
+        if (open) {
+            floatingSearchInput.focus();
+            renderFloatingSearchResults();
+        }
+    }
+    function getFloatingSearchMatches() {
+        const q = slug(floatingSearchInput.value || '');
+        const pool = importedItems;
+        if (!q)
+            return pool.slice(0, 18);
+        return pool.filter(item => [getDisplayTitle(item), getDisplayCategory(item), getDisplayDescription(item), getResolvedOpenUrl(item), getResolvedPlaybackUrl(item), item.url].some(v => slug(v).includes(q))).slice(0, 40);
+    }
+    function scrollToCard(item) {
+        const cards = [...document.querySelectorAll('.media-card')];
+        const found = cards.find(card => (card.dataset.title || '') === getDisplayTitle(item));
+        if (found) {
+            found.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+            found.animate([{
+                boxShadow: '0 0 0 rgba(0,0,0,0)'
+            }, {
+                boxShadow: '0 0 0 3px rgba(74,123,255,.7)'
+            }, {
+                boxShadow: '0 0 0 rgba(0,0,0,0)'
+            }], {
+                duration: 1300
+            });
+            return found;
+        }
+        return null;
+    }
+    function renderFloatingSearchResults() {
+        if (!searchResults)
+            return;
+        const results = getFloatingSearchMatches();
+        if (!results.length) {
+            searchResults.innerHTML = `<div class="search-empty">No encontré resultados. Prueba otro nombre, categoría o palabra clave.</div>`;
+            return;
+        }
+        searchResults.innerHTML = '';
+        results.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'search-item';
+            row.innerHTML = `
+          <div class="search-item-thumb" style="background-image:url('${escapeAttr(getDisplayImage(item))}')"></div>
+          <div>
+            <div class="search-item-title">${
+            escapeHtml(getDisplayTitle(item))} ${itemHasPlutoCustom(item) ? `<span class="tag" style="margin-left:6px;background:rgba(31,191,117,.18);border-color:rgba(31,191,117,.35)">${getCustomBadge(item)}</span>` : ''}</div>
+            <div class="search-item-meta">${escapeHtml(getDisplayCategory(item) || 'Sin categoría')} · ${escapeHtml(getDisplayDescription(item) || 'Importado')}</div>
+            <div class="search-item-actions">
+              <button type="button" class="go-card">Ir a tarjeta</button>
+              <button type="button" class="go-pip">Mini PiP</button>
+              <a href="${
+
+
+            escapeAttr(getResolvedOpenUrl(item))}" target="_blank" rel="noopener">${isPlutoUrl(item.url) ? 'Abrir en Pluto' : 'Abrir'}</a>
+              ${isPlutoUrl(item.url) ? '<button type="button" class="go-pluto">📺 Pluto</button>' : ''}<button type="button" class="go-edit">✏️ Editar</button>
+            </div>
+          </div>`
+
+            ;
+            row.querySelector('.go-card').onclick = () => {
+                const card = scrollToCard(item);
+                if (card) {
+                    toggleSearchDock(false);
+                }
+            };
+            row.querySelector('.go-pip').onclick = () => {
+                const card = scrollToCard(item);
+                openMiniPip(item, card);
+            };
+            const goPluto = row.querySelector('.go-pluto');
+            if (goPluto)
+                goPluto.onclick = () => openItemTarget(item);
+            const goEdit = row.querySelector('.go-edit');
+            if (goEdit)
+                goEdit.onclick = () => editPlutoItem(item);
+            searchResults.appendChild(row);
+        });
+    }
+
+
+    function getVideasyMetadataMap() {
+        return readJson(STORAGE_KEYS.internalMeta, {});
+    }
+    function saveVideasyMetadataMap(map) {
+        writeJson(STORAGE_KEYS.internalMeta, map || {});
+    }
+    function getFallbackThumb(label) {
+        return 'https://via.placeholder.com/320x180?text=' + encodeURIComponent(label || 'Movie');
+    }
+    function sanitizePositiveInt(value, fallback) {
+        const n = parseInt(value, 10);
+        return Number.isFinite(n) && n > 0 ? n : fallback;
+    }
+    function getPageRangeConfig() {
+        const stored = readJson(STORAGE_KEYS.pageRange, null);
+        const start = sanitizePositiveInt(stored && stored.start, DEFAULT_PAGE_RANGE.start);
+        let quantity = sanitizePositiveInt(stored && stored.quantity, DEFAULT_PAGE_RANGE.quantity);
+        let end = sanitizePositiveInt(stored && stored.end, start + quantity - 1);
+        if (end < start) {
+            end = start;
+        }
+        quantity = end - start + 1;
+        return {
+            start,
+            end,
+            quantity
+        };
+    }
+    function savePageRangeConfig(config) {
+        const start = sanitizePositiveInt(config && config.start, DEFAULT_PAGE_RANGE.start);
+        let end = sanitizePositiveInt(config && config.end, start + DEFAULT_PAGE_RANGE.quantity - 1);
+        if (end < start)
+            end = start;
+        const quantity = end - start + 1;
+        const clean = {
+            start,
+            end,
+            quantity
+        };
+        writeJson(STORAGE_KEYS.pageRange, clean);
+        return clean;
+    }
+    function syncRangeInputs(config) {
+        const cfg = config || getPageRangeConfig();
+        [pageStartInput, footerStartInput].forEach(el => {
+            if (el)
+                el.value = cfg.start;
+        });
+        [pageEndInput, footerEndInput].forEach(el => {
+            if (el)
+                el.value = cfg.end;
+        });
+        [pageQtyInput, footerQtyInput].forEach(el => {
+            if (el)
+                el.value = cfg.quantity;
+        });
+        if (pageRangeNote)
+            pageRangeNote.textContent = `Página actual: ${PAGE_ID} · IDs ${cfg.start} → ${cfg.end} · ${cfg.quantity} items.`;
+        if (footerCurrentRange)
+            footerCurrentRange.textContent = `Rango actual: ${cfg.start} → ${cfg.end} (${cfg.quantity})`;
+    }
+    function syncRangeFromStartEnd(startEl, endEl, qtyEl) {
+        const start = sanitizePositiveInt(startEl && startEl.value, DEFAULT_PAGE_RANGE.start);
+        let end = sanitizePositiveInt(endEl && endEl.value, start);
+        if (end < start)
+            end = start;
+        const qty = end - start + 1;
+        if (qtyEl)
+            qtyEl.value = qty;
+    }
+    function syncRangeFromStartQty(startEl, endEl, qtyEl) {
+        const start = sanitizePositiveInt(startEl && startEl.value, DEFAULT_PAGE_RANGE.start);
+        const qty = sanitizePositiveInt(qtyEl && qtyEl.value, DEFAULT_PAGE_RANGE.quantity);
+        const end = start + qty - 1;
+        if (endEl)
+            endEl.value = end;
+    }
+    function buildVideasyItem(id, metaMap) {
+        const meta = (metaMap && metaMap[String(id)]) ? metaMap[String(id)] : null;
+        const title = meta && meta.title ? meta.title : ('Movie ' + id);
+        const year = meta && meta.year ? ' (' + meta.year + ')' : '';
+        const thumb = meta && meta.thumbnail ? meta.thumbnail : getFallbackThumb(title);
+        const category = meta && meta.category ? meta.category : 'videasy';
+        return normalizeItem({
+            id: 'videasy_' + id,
+            title: title + year,
+            url: VIDEASY_BASE_URL + id,
+            image: thumb,
+            category: category,
+            description: meta && meta.description ? meta.description : '',
+            source: 'videasy'
+        }, 'videasy');
+    }
+    function generateVideasyRange(config) {
+        const cfg = config || getPageRangeConfig();
+        const metaMap = getVideasyMetadataMap();
+        const generated = [];
+        for (let id = cfg.start; id <= cfg.end; id++) {
+            generated.push(buildVideasyItem(id, metaMap));
+        }
+        return generated;
+    }
+    function loadInternalDatabaseFromStorage() {
+        return readJson(STORAGE_KEYS.internalDB, []);
+    }
+    function saveInternalDatabase(items) {
+        writeJson(STORAGE_KEYS.internalDB, items || []);
+    }
+    function renderInternalRange(config, reason) {
+        const generated = generateVideasyRange(config);
+        saveInternalDatabase(generated);
+        writeJson(STORAGE_KEYS.backup, importedItems);
+        importedItems = generated;
+        writeJson(STORAGE_KEYS.imported, importedItems);
+        renderAll();
+        const cfg = config || getPageRangeConfig();
+        showStatus(`✅ ${reason || 'Canales internos cargados'}: ${cfg.start} → ${cfg.end} (${generated.length} items).`);
+        return generated;
+    }
+    function verifyAccess(pass) {
+        return String(pass || '') === ACCESS_PASSWORD;
+    }
+    function requirePassword(customPass, actionLabel) {
+        const provided = String(customPass || '').trim();
+        const pass = provided || window.prompt(`Password requerido para ${actionLabel || 'continuar'}:`) || '';
+        if (!verifyAccess(pass)) {
+            alert('❌ Password incorrecto.');
+            return false;
+        }
+        return true;
+    }
+    function ensurePageAccess() {
+        if (sessionStorage.getItem(STORAGE_KEYS.accessSession) === 'ok')
+            return true;
+        const pass = window.prompt(`Acceso protegido para ${PAGE_ID}. Escribe el password:`) || '';
+        if (!verifyAccess(pass)) {
+            document.body.innerHTML = '<div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#08101d;color:#ecf3ff;font-family:Inter,system-ui,sans-serif"><div style="max-width:520px;width:100%;background:#10182d;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:24px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)"><div style="font-size:42px;margin-bottom:12px">🔒</div><h2 style="margin:0 0 8px">Acceso denegado</h2><p style="margin:0;color:#95a8d6;line-height:1.6">El password no es correcto. Recarga la página para intentar otra vez.</p></div></div>';
+            return false;
+        }
+        sessionStorage.setItem(STORAGE_KEYS.accessSession, 'ok');
+        return true;
+    }
+    async function importarMetadataVideasyDesdeArchivo(file) {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('El archivo debe ser un objeto JSON con IDs como claves.');
+        }
+        const current = getVideasyMetadataMap();
+        const merged = Object.assign({}, current, parsed);
+        saveVideasyMetadataMap(merged);
+        return merged;
+    }
+    function attachMetadataImporter() {
+        if (document.getElementById('videasyMetaInput'))
+            return;
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.style.display = 'none';
+        input.id = 'videasyMetaInput';
+        input.addEventListener('change', async function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file)
+                return;
+            try {
+                await importarMetadataVideasyDesdeArchivo(file);
+                renderInternalRange(getPageRangeConfig(), 'Metadata Videasy importada y regenerada');
+            } catch (err) {
+                alert('❌ Error importando metadata: ' + err.message);
+            }
+            e.target.value = '';
+        });
+        document.body.appendChild(input);
+    }
+    function openMetadataImporter() {
+        if (!requirePassword(accessPasswordInput && accessPasswordInput.value, 'importar metadata'))
+            return;
+        document.getElementById('videasyMetaInput').click();
+    }
+    function collectRangeFromInputs(startEl, endEl, qtyEl) {
+        let start = sanitizePositiveInt(startEl && startEl.value, DEFAULT_PAGE_RANGE.start);
+        let end = sanitizePositiveInt(endEl && endEl.value, 0);
+        let qty = sanitizePositiveInt(qtyEl && qtyEl.value, 0);
+        if (!end && qty)
+            end = start + qty - 1;
+        if (!qty && end)
+            qty = end - start + 1;
+        if (!end && !qty) {
+            qty = DEFAULT_PAGE_RANGE.quantity;
+            end = start + qty - 1;
+        }
+        if (end < start)
+            end = start;
+        qty = end - start + 1;
+        return {
+            start,
+            end,
+            quantity: qty
+        };
+    }
+    function handleSavePageRange(startEl, endEl, qtyEl, passwordEl) {
+        if (!requirePassword(passwordEl && passwordEl.value, 'guardar rango'))
+            return;
+        const config = savePageRangeConfig(collectRangeFromInputs(startEl, endEl, qtyEl));
+        syncRangeInputs(config);
+        renderInternalRange(config, 'Rango guardado y cargado');
+        if (passwordEl)
+            passwordEl.value = '';
+    }
+    function bindProtectedFooterLinks() {
+        document.querySelectorAll('.tb-footer-links a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!requirePassword(footerPasswordInput && footerPasswordInput.value, 'entrar a otra page')) {
+                    e.preventDefault();
+                    return;
+                }
+                sessionStorage.setItem(`videasy_access_ok:${(new URL(link.href, location.href).pathname.split('/').pop() || '').toLowerCase()}`, 'ok');
+                if (footerPasswordInput)
+                    footerPasswordInput.value = '';
+            });
+        });
+    }
+
+
+    function getYoutubeApiKey() {
+        return String((youtubeApiKeyInput && youtubeApiKeyInput.value) || localStorage.getItem(STORAGE_KEYS.youtubeApiKey) || '').trim();
+    }
+    function saveYoutubeApiKey() {
+        if (youtubeApiKeyInput) localStorage.setItem(STORAGE_KEYS.youtubeApiKey, youtubeApiKeyInput.value.trim());
+    }
+    function normalizeYoutubeQueryItem(item) {
+        if (typeof item === 'string') return item.trim();
+        if (item && typeof item === 'object') {
+            return String(item.title || item.name || item.song || item.query || item.tema || item.track || '').trim();
+        }
+        return '';
+    }
+    function parseYoutubeJsonText(text) {
+        const clean = String(text || '').replace(/^\uFEFF/, '').trim();
+        let parsed;
+        try { parsed = JSON.parse(clean); }
+        catch {
+            return clean.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        }
+        let arr = [];
+        if (Array.isArray(parsed)) arr = parsed;
+        else if (Array.isArray(parsed.temas)) arr = parsed.temas;
+        else if (Array.isArray(parsed.themes)) arr = parsed.themes;
+        else if (Array.isArray(parsed.songs)) arr = parsed.songs;
+        else if (Array.isArray(parsed.items)) arr = parsed.items;
+        else arr = [parsed];
+        return arr.map(normalizeYoutubeQueryItem).filter(Boolean);
+    }
+    function getYoutubeQueue() {
+        return readJson(STORAGE_KEYS.youtubeQueue, []);
+    }
+    function setYoutubeQueue(queue) {
+        const unique = Array.from(new Set((queue || []).map(x => String(x || '').trim()).filter(Boolean)));
+        writeJson(STORAGE_KEYS.youtubeQueue, unique);
+        renderYoutubeQueuePreview(unique);
+        return unique;
+    }
+    function renderYoutubeQueuePreview(queue) {
+        if (!youtubeQueuePreview) return;
+        const list = queue || getYoutubeQueue();
+        if (!list.length) {
+            youtubeQueuePreview.innerHTML = 'Cola YouTube vacía.';
+            return;
+        }
+        youtubeQueuePreview.innerHTML = `<b>${list.length} temas cargados · marca solo los que quieres generar:</b><br>` + list.slice(0, 200).map((q, i) => `
+            <label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;color:#dce7ff">
+                <input type="checkbox" class="youtube-topic-check" data-index="${i}" checked style="margin-top:3px;accent-color:#4a7bff">
+                <span>${i + 1}. ${escapeHtml(q)}</span>
+            </label>`).join('') + (list.length > 200 ? '<br>...' : '');
+    }
+    function getYoutubeSelectedQueue() {
+        const list = getYoutubeQueue();
+        if (!youtubeQueuePreview) return list;
+        const checks = Array.from(youtubeQueuePreview.querySelectorAll('.youtube-topic-check'));
+        if (!checks.length) return list;
+        return checks
+            .filter(ch => ch.checked)
+            .map(ch => list[parseInt(ch.dataset.index, 10)])
+            .filter(Boolean);
+    }
+    function setYoutubeQueueChecks(value) {
+        if (!youtubeQueuePreview) return;
+        youtubeQueuePreview.querySelectorAll('.youtube-topic-check').forEach(ch => { ch.checked = !!value; });
+    }
+    function extractYoutubeId(value='') {
+        const u = String(value || '');
+        const shortMatch = u.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/i);
+        if (shortMatch) return shortMatch[1];
+        const watchMatch = u.match(/[?&]v=([A-Za-z0-9_-]{6,})/i);
+        if (watchMatch) return watchMatch[1];
+        const embedMatch = u.match(/(?:youtube\.com|youtube-nocookie\.com)\/embed\/([A-Za-z0-9_-]{6,})/i);
+        if (embedMatch) return embedMatch[1];
+        const shortsMatch = u.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/i);
+        if (shortsMatch) return shortsMatch[1];
+        return '';
+    }
+    function youtubeWatchUrl(videoId) {
+        return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&autoplay=1`;
+    }
+    function youtubeEmbedUrl(videoId) {
+        // IMPORTANTE: el Mini PiP solo debe usar formato /embed, nunca /watch.
+        return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
+    }
+    function youtubeVideoUrl(videoId) {
+        return youtubeWatchUrl(videoId);
+    }
+    function youtubeThumb(videoId) {
+        return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    }
+    function youtubeSearchUrl(query) {
+        return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    }
+    async function searchYoutubeFirst(query) {
+        const key = getYoutubeApiKey();
+        const region = String((youtubeRegionInput && youtubeRegionInput.value) || 'US').trim() || 'US';
+
+        // Si tu JSON trae un link directo de YouTube, usamos ese video sin gastar API.
+        const directId = extractYoutubeId(query);
+        if (directId) {
+            return {
+                id: 'youtube_' + directId,
+                title: query.replace(/https?:\/\/\S+/g, '').trim() || 'YouTube Video ' + directId,
+                url: youtubeWatchUrl(directId),
+                image: youtubeThumb(directId),
+                category: 'YouTube',
+                description: 'Link directo detectado desde tu JSON.',
+                source: 'youtube',
+                youtubeVideoId: directId
+            };
+        }
+
+        if (!key) {
+            throw new Error('Falta YouTube API Key. Sin API key solo cargo la lista del JSON, pero no puedo resolver video + imagen automáticamente.');
+        }
+
+        async function runSearch(embeddable){
+            const emb = embeddable ? '&videoEmbeddable=true' : '';
+            const endpoint = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1${emb}&regionCode=${encodeURIComponent(region)}&q=${encodeURIComponent(query)}&key=${encodeURIComponent(key)}`;
+            const res = await fetch(endpoint);
+            if (!res.ok) throw new Error('YouTube API HTTP ' + res.status);
+            return await res.json();
+        }
+
+        let data = await runSearch(true);
+        let first = data.items && data.items[0];
+
+        // Si no encuentra video embeddable, hacemos segunda búsqueda normal para crear la tarjeta con imagen y link.
+        if (!first) {
+            data = await runSearch(false);
+            first = data.items && data.items[0];
+        }
+
+        if (!first || !first.id || !first.id.videoId) throw new Error('No encontré video para: ' + query);
+        const videoId = first.id.videoId;
+        const sn = first.snippet || {};
+        return {
+            id: 'youtube_' + videoId,
+            title: sn.title || query,
+            url: youtubeWatchUrl(videoId),
+            image: (sn.thumbnails && (sn.thumbnails.high?.url || sn.thumbnails.medium?.url || sn.thumbnails.default?.url)) || youtubeThumb(videoId),
+            category: 'YouTube',
+            description: sn.channelTitle ? `Canal: ${sn.channelTitle}` : query,
+            source: 'youtube',
+            youtubeVideoId: videoId
+        };
+    }
+    async function generateYoutubeCardsFromQueue(options={}) {
+        saveYoutubeApiKey();
+        const queue = options.single ? [options.single] : getYoutubeSelectedQueue();
+        const limit = Math.min(sanitizePositiveInt(youtubeLimitInput && youtubeLimitInput.value, queue.length || 20), queue.length || 1);
+        if (!queue.length) {
+            showStatus('Carga un JSON y marca al menos un tema, o escribe un tema manual.', 'err');
+            return [];
+        }
+        const generated = [];
+        const hasKey = !!getYoutubeApiKey();
+        const allAreDirectLinks = queue.slice(0, limit).every(q => !!extractYoutubeId(q));
+        if (!hasKey && !allAreDirectLinks) {
+            showStatus('⚠️ Falta YouTube API Key: puedo usar links directos de YouTube, pero no puedo buscar por nombre sin esa key.', 'err');
+            return [];
+        }
+        showStatus(`🔎 Buscando en YouTube: 0/${limit}...`);
+        for (let i = 0; i < limit; i++) {
+            try {
+                const item = await searchYoutubeFirst(queue[i]);
+                generated.push(normalizeItem(item, item.source || 'youtube'));
+                showStatus(`🔎 Buscando en YouTube: ${i + 1}/${limit}...`);
+            } catch (err) {
+                console.warn(err);
+                generated.push(normalizeItem({
+                    title: queue[i],
+                    url: youtubeSearchUrl(queue[i]),
+                    image: getFallbackThumb(queue[i]),
+                    category: 'YouTube pendiente',
+                    description: 'No se pudo resolver automáticamente. Revisa tu YouTube API Key/cuota o usa un link directo de YouTube en el JSON.',
+                    source: 'youtube-fallback'
+                }, 'youtube-fallback'));
+            }
+        }
+        writeJson(STORAGE_KEYS.youtubeResults, generated);
+        writeJson(STORAGE_KEYS.backup, importedItems);
+        importedItems = generated;
+        writeJson(STORAGE_KEYS.imported, importedItems);
+        renderAll();
+        showStatus(`✅ YouTube listo: ${generated.length} tarjetas creadas.`);
+        return generated;
+    }
+
+    fileInput.addEventListener('change', async (e) => {
+        hideStatus();
+        const file=e.target.files?.[0];
+        if (!file)
+            return;
+        try {
+            const text = await file.text();
+            const name = file.name.toLowerCase();
+            let items = [];
+            if (name.endsWith('.json'))
+                items = parseJSONContent(text, 'json-file');
+            else
+                items = parseM3U(text, 'm3u-file');
+            mergeImported(items);
+            showStatus(`Importación completada: ${items.length} items desde ${file.name}.`);
+        } catch (err) {
+            showStatus('No se pudo importar el archivo. Revisa el formato.', 'err');
+        }
+        e.target.value = '';
+    });
+
+    importUrlBtn.addEventListener('click', async () => {
+        hideStatus();
+        const url = urlInput.value.trim();
+        if (!url) {
+            showStatus('Pega una URL primero.', 'err');
+            return;
+        }
+        try {
+            const res = await fetch(url);
+            if (!res.ok)
+                throw new Error('HTTP');
+            const text = await res.text();
+            const lower = url.toLowerCase();
+            let items = [];
+            if (lower.includes('.json'))
+                items = parseJSONContent(text, 'json-web');
+            else {
+                try {
+                    items = parseJSONContent(text, 'json-web');
+                }
+                catch {
+                    items = parseM3U(text, 'm3u-web');
+                }
+            }
+            mergeImported(items);
+            showStatus(`Importación web completada: ${items.length} items.`);
+        } catch (err) {
+            showStatus('No se pudo importar por URL. Posible bloqueo CORS o enlace inválido.', 'err');
+        }
+    });
+
+    restoreBackupBtn.addEventListener('click', restoreBackup);
+    clearImportedBtn.addEventListener('click', clearImported);
+    exportImportedBtn.addEventListener('click', () => exportJSON(importedItems, 'importados_pro.json'));
+    addAllImportedBtn.addEventListener('click', addAllImportedToFavorites);
+    exportFavsBtn.addEventListener('click', () => exportJSON(favorites, 'favoritos_carrusel.json'));
+    searchInput.addEventListener('input', renderAll);
+    document.querySelectorAll('input[name="importMode"]').forEach(r => r.addEventListener('change', updateStats));
+    dedupeToggle.addEventListener('change', updateStats);
+    favLeftBtn.addEventListener('click', () => favoritesCarousel.scrollBy({
+        left: -380,
+        behavior: 'smooth'
+    }));
+    favRightBtn.addEventListener('click', () => favoritesCarousel.scrollBy({
+        left: 380,
+        behavior: 'smooth'
+    }));
+
+    miniPipClose.addEventListener('click', closeMiniPip);
+    miniPipFavBtn.addEventListener('click', () => {
+        if (currentPipItem)
+            toggleFavorite(currentPipItem);
+    });
+    window.addEventListener('resize', () => {
+        if (miniPip.classList.contains('show'))
+            positionMiniPip(currentPipAnchor);
+    });
+    window.addEventListener('scroll', () => {
+        if (miniPip.classList.contains('show') && currentPipAnchor)
+            positionMiniPip(currentPipAnchor);
+    }, {
+        passive: true
+    });
+
+    searchFab.addEventListener('click', () => toggleSearchDock());
+    searchDockClose.addEventListener('click', () => toggleSearchDock(false));
+    floatingSearchInput.addEventListener('input', renderFloatingSearchResults);
+
+    if (youtubeApiKeyInput) {
+        youtubeApiKeyInput.value = localStorage.getItem(STORAGE_KEYS.youtubeApiKey) || '';
+        youtubeApiKeyInput.addEventListener('input', saveYoutubeApiKey);
+    }
+    youtubeJsonInput && youtubeJsonInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const queue = parseYoutubeJsonText(text);
+            if (!queue.length) throw new Error('El JSON no tiene nombres válidos.');
+            setYoutubeQueue(queue);
+            showStatus(`🎵 JSON cargado: ${queue.length} temas listos.`);
+        } catch (err) {
+            showStatus('No se pudo cargar el JSON de temas: ' + (err.message || err), 'err');
+        }
+        e.target.value = '';
+    });
+    youtubeSearchOneBtn && youtubeSearchOneBtn.addEventListener('click', async () => {
+        const q = String((youtubeSingleQueryInput && youtubeSingleQueryInput.value) || '').trim();
+        if (!q) return showStatus('Escribe un tema para buscar.', 'err');
+        await generateYoutubeCardsFromQueue({ single: q });
+    });
+    youtubeGenerateBtn && youtubeGenerateBtn.addEventListener('click', () => generateYoutubeCardsFromQueue());
+    youtubeSelectAllBtn && youtubeSelectAllBtn.addEventListener('click', () => setYoutubeQueueChecks(true));
+    youtubeSelectNoneBtn && youtubeSelectNoneBtn.addEventListener('click', () => setYoutubeQueueChecks(false));
+    youtubeExportBtn && youtubeExportBtn.addEventListener('click', () => exportJSON(readJson(STORAGE_KEYS.youtubeResults, []), 'youtube_favorites_cards.json'));
+    youtubeClearQueueBtn && youtubeClearQueueBtn.addEventListener('click', () => {
+        setYoutubeQueue([]);
+        writeJson(STORAGE_KEYS.youtubeResults, []);
+        showStatus('Cola YouTube limpiada.');
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            toggleSearchDock(false);
+            closeMiniPip();
+        }
+    });
+
+    [pageStartInput, footerStartInput].forEach(el => el && el.addEventListener('input', () => {
+        if (el === pageStartInput)
+            syncRangeFromStartEnd(pageStartInput, pageEndInput, pageQtyInput);
+        if (el === footerStartInput)
+            syncRangeFromStartEnd(footerStartInput, footerEndInput, footerQtyInput);
+    }));
+    [pageEndInput, footerEndInput].forEach(el => el && el.addEventListener('input', () => {
+        if (el === pageEndInput)
+            syncRangeFromStartEnd(pageStartInput, pageEndInput, pageQtyInput);
+        if (el === footerEndInput)
+            syncRangeFromStartEnd(footerStartInput, footerEndInput, footerQtyInput);
+    }));
+    [pageQtyInput, footerQtyInput].forEach(el => el && el.addEventListener('input', () => {
+        if (el === pageQtyInput)
+            syncRangeFromStartQty(pageStartInput, pageEndInput, pageQtyInput);
+        if (el === footerQtyInput)
+            syncRangeFromStartQty(footerStartInput, footerEndInput, footerQtyInput);
+    }));
+
+    applyPageRangeBtn && applyPageRangeBtn.addEventListener('click', () => handleSavePageRange(pageStartInput, pageEndInput, pageQtyInput, accessPasswordInput));
+    footerApplyRangeBtn && footerApplyRangeBtn.addEventListener('click', () => handleSavePageRange(footerStartInput, footerEndInput, footerQtyInput, footerPasswordInput));
+    loadInternalBtn && loadInternalBtn.addEventListener('click', () => {
+        if (!requirePassword(accessPasswordInput && accessPasswordInput.value, 'ver canales internos'))
+            return;
+        renderInternalRange(getPageRangeConfig(), 'Canales internos visibles');
+        if (accessPasswordInput)
+            accessPasswordInput.value = '';
+    });
+    footerLoadInternalBtn && footerLoadInternalBtn.addEventListener('click', () => {
+        if (!requirePassword(footerPasswordInput && footerPasswordInput.value, 'ver canales internos'))
+            return;
+        renderInternalRange(getPageRangeConfig(), 'Canales internos visibles');
+        if (footerPasswordInput)
+            footerPasswordInput.value = '';
+    });
+    regenInternalBtn && regenInternalBtn.addEventListener('click', () => {
+        if (!requirePassword(accessPasswordInput && accessPasswordInput.value, 'regenerar internos'))
+            return;
+        if (!confirm('¿Deseas regenerar los canales internos de esta page?'))
+            return;
+        renderInternalRange(getPageRangeConfig(), 'Videasy regenerado');
+        if (accessPasswordInput)
+            accessPasswordInput.value = '';
+    });
+    footerRegenBtn && footerRegenBtn.addEventListener('click', () => {
+        if (!requirePassword(footerPasswordInput && footerPasswordInput.value, 'regenerar internos'))
+            return;
+        if (!confirm('¿Deseas regenerar los canales internos de esta page?'))
+            return;
+        renderInternalRange(getPageRangeConfig(), 'Videasy regenerado');
+        if (footerPasswordInput)
+            footerPasswordInput.value = '';
+    });
+    importMetaBtn && importMetaBtn.addEventListener('click', openMetadataImporter);
+    exportPageConfigBtn && exportPageConfigBtn.addEventListener('click', () => exportJSON({
+        page: PAGE_ID,
+        passwordHint: 'Cambia ACCESS_PASSWORD en el HTML',
+        range: getPageRangeConfig()
+    }, `${PAGE_ID.replace(/\.html$/, '')}_videasy_config.json`));
+
+    attachMetadataImporter();
+    bindProtectedFooterLinks();
+    renderYoutubeQueuePreview();
+    if (ensurePageAccess()) {
+        const currentRange = savePageRangeConfig(getPageRangeConfig());
+        syncRangeInputs(currentRange);
+        if (!importedItems.length || importedItems.every(item => item && item.source === 'videasy')) {
+            importedItems = loadInternalDatabaseFromStorage();
+            if (!importedItems.length)
+                importedItems = generateVideasyRange(currentRange);
+            writeJson(STORAGE_KEYS.imported, importedItems);
+        }
+        renderAll();
+        showStatus(`🔐 Acceso concedido. ${PAGE_ID} listo con rango ${currentRange.start} → ${currentRange.end}.`);
+    }
+    </script>
+    <div class="footer-wrap">
+        <footer class="tb-footer-ultra">
+            <div class="tb-footer-glow"></div>
+
+            <div class="tb-footer-top">
+                <div class="tb-brand">
+                    <div class="tb-brand-icon">⚡</div>
+                    <div class="tb-brand-copy">
+                        <div class="tb-brand-title">Tech Blue Navigation</div>
+                        <div class="tb-brand-sub">Accesos rápidos premium para tu ecosistema</div>
+                    </div>
+                </div>
+                <div class="tb-footer-status">
+                    <span class="tb-dot"></span>
+                     Footer nivel dios activo
+                </div>
+            </div>
+
+            <nav class="tb-footer-links" aria-label="Footer navigation">
+                <a href="index.html">
+                    <span class="tb-icon">📚</span>
+                    <span>home</span>
+                </a>
+                <a href="play-now.html">
+                    <span class="tb-icon">📚</span>
+                    <span>4 monitors play now card pro</span>
+                </a>
+                <a href="series.html">
+                    <span class="tb-icon">📚</span>
+                    <span>series</span>
+                </a>
+                <a href="Global-tv.html">
+                    <span class="tb-icon">📚</span>
+                    <span>Global tv</span>
+                </a>
+                <a href="search-movies-id.html">
+                    <span class="tb-icon">📚</span>
+                    <span>movie id search</span>
+                </a>
+                <a href="prime-tv-channels.html">
+                    <span class="tb-icon">📚</span>
+                    <span>canales prime</span>
+                </a>
+                <a href="adult.html">
+                    <span class="tb-icon">📚</span>
+                    <span>adult</span>
+                </a>
+            </nav>
+
+            <div class="footer-admin-wrap">
+                <div class="footer-admin-card">
+                    <div class="footer-admin-head">
+                        <div>
+                            <div class="footer-admin-title">Control rápido de rango por página</div>
+                            <div class="footer-admin-sub">Antes de cambiar rango o entrar a otra page, se pedirá el password.</div>
+                        </div>
+                        <span class="page-range-badge" id="footerCurrentRange">Rango actual: --</span>
+                    </div>
+                    <div class="footer-admin-grid">
+                        <input id="footerStartInput" class="input" type="number" min="1" step="1" placeholder="Inicio">
+                        <input id="footerEndInput" class="input" type="number" min="1" step="1" placeholder="Fin">
+                        <input id="footerQtyInput" class="input" type="number" min="1" step="1" placeholder="Cantidad">
+                        <input id="footerPasswordInput" class="input" type="password" placeholder="Password">
+                        <button id="footerApplyRangeBtn" class="primary">Guardar rango</button>
+                    </div>
+                    <div class="footer-admin-actions">
+                        <button id="footerLoadInternalBtn">Cargar internos</button>
+                        <button id="footerRegenBtn">Regenerar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tb-footer-bottom">
+                <div>© 2026 Tech Blue · Cuida, organiza y navega</div>
+                <div>GitHub Pages Ready · Responsive Ultra</div>
+            </div>
+        </footer>
+    </div>
+
+    <style>
+    body {
+        padding-bottom: 24px;
+    }
+
+    .footer-wrap {
+        width: 100%;
+        margin-top: 26px;
+        padding: 16px 18px 24px;
+    }
+
+    .tb-footer-ultra {
+        position: relative;
+        overflow: hidden;
+        max-width: 1280px;
+        margin: 0 auto;
+        border: 1px solid rgba(125, 211, 252, .22);
+        border-radius: 26px;
+        background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, .16), transparent 28%), radial-gradient(circle at top right, rgba(37, 99, 235, .14), transparent 32%), linear-gradient(180deg, rgba(10, 21, 40, .98), rgba(6, 16, 29, .98));
+        box-shadow:
+        0 10px 40px rgba(0, 0, 0, .30), 0 0 24px rgba(56, 189, 248, .14), inset 0 1px 0 rgba(255, 255, 255, .05);
+        backdrop-filter: blur(10px);
+    }
+
+    .tb-footer-glow {
+        position: absolute;
+        inset: -20% auto auto 50%;
+        width: 320px;
+        height: 320px;
+        transform: translateX(-50%);
+        background: radial-gradient(circle, rgba(56, 189, 248, .14), transparent 68%);
+        pointer-events: none;
+        filter: blur(8px);
+    }
+
+    .tb-footer-top {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 20px 22px 12px;
+        border-bottom: 1px solid rgba(125, 211, 252, .10);
+    }
+
+    .tb-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .tb-brand-icon {
+        width: 58px;
+        height: 58px;
+        display: grid;
+        place-items: center;
+        border-radius: 18px;
+        font-size: 28px;
+        background: linear-gradient(135deg, rgba(14, 165, 233, .24), rgba(37, 99, 235, .18));
+        border: 1px solid rgba(125, 211, 252, .20);
+        box-shadow: 0 0 18px rgba(56, 189, 248, .18);
+    }
+
+    .tb-brand-title {
+        color: #eaf6ff;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: .3px;
+    }
+
+    .tb-brand-sub {
+        color: #9fc2ea;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .tb-footer-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(10, 22, 40, .88);
+        border: 1px solid rgba(125, 211, 252, .16);
+        color: #dbeafe;
+        font-weight: 800;
+        font-size: 13px;
+        box-shadow: 0 0 14px rgba(56, 189, 248, .08);
+    }
+
+    .tb-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 12px rgba(34, 197, 94, .85);
+    }
+
+    .tb-footer-links {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        padding: 18px 22px;
+    }
+
+    .tb-footer-links a {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 70px;
+        padding: 16px 18px;
+        text-decoration: none;
+        text-align: center;
+        color: #eef6ff;
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: .2px;
+        border-radius: 18px;
+        border: 1px solid rgba(125, 211, 252, .18);
+        background:
+        linear-gradient(180deg, rgba(56, 189, 248, .14), rgba(37, 99, 235, .08)), rgba(9, 21, 37, .96);
+        box-shadow:
+        0 10px 22px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .04);
+        transition:
+        transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+        overflow: hidden;
+    }
+
+    .tb-footer-links a::before {
+        content: "";
+        position: absolute;
+        right: -18px;
+        bottom: -22px;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(125, 211, 252, .16), transparent 68%);
+        pointer-events: none;
+    }
+
+    .tb-footer-links a::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -120%;
+        width: 50%;
+        height: 100%;
+        transform: skewX(-18deg);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .10), transparent);
+        transition: left .45s ease;
+    }
+
+    .tb-footer-links a:hover {
+        transform: translateY(-4px) scale(1.02);
+        border-color: rgba(125, 211, 252, .42);
+        background:
+        linear-gradient(180deg, rgba(56, 189, 248, .24), rgba(37, 99, 235, .14)), rgba(9, 21, 37, .98);
+        box-shadow:
+        0 16px 28px rgba(0, 0, 0, .28), 0 0 22px rgba(56, 189, 248, .16);
+    }
+
+    .tb-footer-links a:hover::after {
+        left: 135%;
+    }
+
+    .tb-footer-links a:active {
+        transform: translateY(0) scale(.99);
+    }
+
+    .tb-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .05);
+        font-size: 17px;
+        flex: 0 0 32px;
+    }
+
+    .tb-footer-bottom {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 22px 20px;
+        color: #9fc2ea;
+        font-size: 12px;
+        border-top: 1px solid rgba(125, 211, 252, .08);
+    }
+
+    @media (max-width: 980px) {
+        .tb-footer-links {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .tb-footer-top {
+            padding: 18px 16px 10px;
+        }
+
+        .tb-footer-links {
+            grid-template-columns: 1fr;
+            padding: 16px;
+        }
+
+        .tb-footer-links a {
+            min-height: 64px;
+            font-size: 17px;
+        }
+
+        .tb-brand-title {
+            font-size: 19px;
+        }
+
+        .tb-footer-bottom {
+            padding: 0 16px 18px;
+            font-size: 12px;
+        }
+    }
+    </style>
+
+</body>
+</html>
+</body>
+</html>
