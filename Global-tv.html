@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tech Blue • One Button MULTI (Clones Autónomos)</title>
+<meta name="color-scheme" content="dark">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<style>
+  :root{
+    --accent:#1f8bff;
+    --accent2:#4ac3ff;
+    --ink:#eaf2ff;
+    --muted:#a9c0ff;
+    --line: rgba(255,255,255,.14);
+    --desk: rgba(10,14,32,.10);
+
+    --btnW: 360px;
+    --btnH: 98px;
+    --round: 22px;
+
+    --radius: 160px;
+    --drawerW: 480px;
+    --shadow: 0 22px 80px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:transparent;overflow:hidden}
+
+  body::before{
+    content:"";
+    position:fixed; inset:-40px;
+    background:
+      radial-gradient(820px 420px at 50% 45%, color-mix(in oklab, var(--desk) 75%, transparent), transparent 62%),
+      radial-gradient(520px 280px at 35% 35%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 64%),
+      radial-gradient(520px 280px at 65% 65%, color-mix(in oklab, var(--accent2) 10%, transparent), transparent 64%);
+    pointer-events:none;
+    filter: blur(10px);
+    opacity:.95;
+  }
+
+  /* ===== Multi Instances Layer ===== */
+  .world{
+    position:fixed; inset:0;
+  }
+  .tbInst{
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%);
+  }
+
+  /* ===== Core Card ===== */
+  .core{
+    position:relative;
+    width:var(--btnW); height:var(--btnH);
+    border-radius:var(--round);
+    border:1px solid var(--line);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)),
+      radial-gradient(420px 160px at 20% 0%, color-mix(in oklab, var(--accent) 26%, transparent), transparent 58%),
+      radial-gradient(420px 160px at 80% 120%, color-mix(in oklab, var(--accent2) 18%, transparent), transparent 58%),
+      rgba(0,0,0,.14);
+    backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+    user-select:none;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 14px 14px 16px; gap:10px;
+    transform: translateZ(0);
+    cursor:pointer;
+  }
+
+  .core.dragging{ cursor:grabbing; }
+  .core .left{display:flex; align-items:center; gap:10px; min-width:0;}
+  .core .logo{
+    width:44px;height:44px;border-radius:16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow: 0 14px 30px color-mix(in oklab, var(--accent) 24%, transparent);
+    flex:0 0 auto;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  .core .txt{min-width:0}
+  .core .txt b{display:block;color:var(--ink);font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .core .txt small{display:block;color:var(--muted);font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .actions{display:flex; gap:8px; align-items:center; flex:0 0 auto;}
+  .chip{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(94, 93, 93, 0.546);
+    color: var(--ink);
+    padding:9px 10px;
+    border-radius:14px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .chip:active{ transform: translateY(1px); }
+
+  /* ===== Card background overlay (image bg mode) ===== */
+  .coreBgOverlay{
+    position:absolute; inset:0;
+    border-radius: var(--round);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: .35;
+    pointer-events:none;
+    filter: saturate(1.05) contrast(1.05);
+    mix-blend-mode: screen;
+  }
+
+  /* ===== Spider ===== */
+  .spider{position:absolute; left:50%; top:50%; width:1px; height:1px; pointer-events:none;}
+  .leg{
+    position:absolute; left:50%; top:50%;
+    height:2px; transform-origin:left center;
+    opacity:0; width:0;
+    background: linear-gradient(90deg, rgba(31,139,255,.0), rgba(31,139,255,.55), rgba(74,195,255,.22));
+    filter: drop-shadow(0 0 10px rgba(31,139,255,.25));
+    transition: width .28s ease, opacity .28s ease;
+  }
+  .node{
+    position:absolute; width:56px; height:56px;
+    border-radius:18px;
+    transform: translate(-50%,-50%) scale(.72);
+    opacity:0;
+    pointer-events:auto;
+    display:grid; place-items:center;
+    border:1px solid rgba(255,255,255,.14);
+    background:
+      radial-gradient(120px 70px at 30% 30%, rgba(255,255,255,.10), transparent 60%),
+      rgba(12,18,44,.85);
+    box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    transition: transform .28s ease, opacity .28s ease, filter .28s ease;
+    backdrop-filter: blur(10px);
+  }
+  .node:hover{ filter: brightness(1.12); transform: translate(var(--tx), var(--ty)) translate(-50%,-50%) scale(.80); }
+  .node i{font-style:normal;font-size:20px;}
+  .nodeLabel{
+    position:absolute; top:calc(100% + 8px); left:50%;
+    transform:translateX(-50%);
+    font-size:11px; color:rgba(233,242,255,.9);
+    padding:6px 8px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.22);
+    white-space:nowrap;
+  }
+
+  .node[data-a="0"]   { --ux:  0;    --uy: -1; }
+  .node[data-a="45"]  { --ux:  0.707;--uy: -0.707; }
+  .node[data-a="90"]  { --ux:  1;    --uy:  0; }
+  .node[data-a="135"] { --ux:  0.707;--uy:  0.707; }
+  .node[data-a="180"] { --ux:  0;    --uy:  1; }
+  .node[data-a="225"] { --ux: -0.707;--uy:  0.707; }
+  .node[data-a="270"] { --ux: -1;    --uy:  0; }
+  .node[data-a="315"] { --ux: -0.707;--uy: -0.707; }
+
+  .open .node{
+    opacity:1;
+    --tx: calc(var(--ux) * var(--radius));
+    --ty: calc(var(--uy) * var(--radius));
+    transform: translate(var(--tx), var(--ty)) translate(-50%,-50%) scale(.78);
+  }
+  .open .leg{ opacity:1; width: calc(var(--radius) - 22px); }
+
+  .leg[data-a="0"]   { transform: translate(0,-1px) rotate(-90deg); }
+  .leg[data-a="45"]  { transform: translate(0,-1px) rotate(-45deg); }
+  .leg[data-a="90"]  { transform: translate(0,-1px) rotate( 0deg); }
+  .leg[data-a="135"] { transform: translate(0,-1px) rotate( 45deg); }
+  .leg[data-a="180"] { transform: translate(0,-1px) rotate( 90deg); }
+  .leg[data-a="225"] { transform: translate(0,-1px) rotate(135deg); }
+  .leg[data-a="270"] { transform: translate(0,-1px) rotate(180deg); }
+  .leg[data-a="315"] { transform: translate(0,-1px) rotate(-135deg); }
+
+  /* ===== Drawer (per instance) ===== */
+  .drawer{
+    position:fixed; top:50%; right:18px;
+    transform: translateY(-50%);
+    width:min(var(--drawerW), calc(100vw - 36px));
+    max-height: min(86vh, 820px);
+    overflow:auto;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.14);
+    background:
+      radial-gradient(560px 240px at 15% 0%, rgba(31,139,255,.18), transparent 60%),
+      rgba(10,14,32,.86);
+    box-shadow: 0 30px 90px rgba(0,0,0,.65);
+    backdrop-filter: blur(12px);
+    display:none; z-index:20;
+  }
+  .drawer.show{ display:block; }
+  .dTop{
+    position:sticky; top:0;
+    padding:12px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    background: rgba(10,14,32,.80);
+    backdrop-filter: blur(12px);
+  }
+  .dTop b{ font-size:13px; color:rgba(233,242,255,.95); }
+  .xbtn{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color:var(--ink);
+    border-radius:12px;
+    padding:9px 10px;
+    cursor:pointer;
+  }
+  .dBody{ padding:12px; display:grid; gap:10px; }
+
+  .card{
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.04);
+    border-radius:18px;
+    padding:12px;
+  }
+  .card h3{ margin:0 0 6px 0; font-size:12px; }
+  .card p{ margin:0 0 10px 0; font-size:12px; color:var(--muted); line-height:1.35; }
+
+  input,textarea{
+    width:100%;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(0,0,0,.22);
+    color:var(--ink);
+    padding:10px 12px;
+    outline:none;
+    font-size:13px;
+  }
+  textarea{ min-height:120px; resize:vertical; }
+
+  .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(31,139,255,.12);
+    color:var(--ink);
+    cursor:pointer;
+    font-size:13px;
+  }
+  .btn.secondary{ background: rgba(255,255,255,.06); }
+  .btn.good{ background: rgba(32,201,151,.14); }
+  .btn.bad{ background: rgba(239,71,111,.14); }
+
+  .list{ display:grid; gap:8px; max-height:320px; overflow:auto; padding-right:4px; }
+  .item{
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.18);
+    border-radius:16px;
+    padding:10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .item small{ display:block; color:var(--muted); margin-top:2px; }
+  .tag{
+    font-size:11px;
+    padding:6px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color:rgba(233,242,255,.9);
+    white-space:nowrap;
+  }
+
+  /* player */
+  .playerWrap{
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:16px;
+    overflow:hidden;
+    background: rgba(0,0,0,.20);
+  }
+  video{ width:100%; height:auto; display:block; background:#000; }
+
+  /* toast */
+  .toast{
+    position:fixed;
+    left:50%; bottom:16px;
+    transform:translateX(-50%);
+    background: rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.14);
+    color:var(--ink);
+    border-radius:999px;
+    padding:10px 12px;
+    font-size:12px;
+    display:none;
+    z-index:60;
+    backdrop-filter: blur(10px);
+  }
+  .toast.show{ display:block; }
+
+  /* PiP per instance */
+  .pip{
+    position:fixed;
+    left: 22px;
+    bottom: 22px;
+    width: 380px;
+    max-width: calc(100vw - 44px);
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.14);
+    background:
+      radial-gradient(520px 220px at 15% 0%, rgba(31,139,255,.18), transparent 60%),
+      rgba(10,14,32,.88);
+    box-shadow: 0 30px 90px rgba(0,0,0,.70);
+    backdrop-filter: blur(12px);
+    display:none;
+    z-index:80;
+    overflow:hidden;
+  }
+  .pip.show{ display:block; }
+  .pipHead{
+    padding:10px 10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    cursor: grab;
+    user-select:none;
+  }
+  .pipHead:active{ cursor: grabbing; }
+  .pipTitle{
+    min-width:0;
+    color:rgba(233,242,255,.95);
+    font-size:12px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .pipBtns{ display:flex; gap:8px; flex:0 0 auto; }
+  .pipBtn{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color:var(--ink);
+    border-radius:12px;
+    padding:7px 9px;
+    cursor:pointer;
+    font-size:12px;
+  }
+  .pipBody{ padding:10px; }
+</style>
+</head>
+<body>
+
+<div class="world" id="world"></div>
+<div class="toast" id="toast">Listo</div>
+
+<script>
+/* =========================
+   Tech Blue MULTI Instance Engine
+   - Clones autónomos
+   - Estado por instancia (localStorage key único)
+   - Drag por instancia (posición guardada)
+========================= */
+
+const toastEl = document.getElementById("toast");
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(window.__t);
+  window.__t = setTimeout(()=>toastEl.classList.remove("show"), 1400);
+}
+
+function esc(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function hexToRgba(hex, a){
+  const h = hex.replace("#","");
+  const r = parseInt(h.slice(0,2),16);
+  const g = parseInt(h.slice(2,4),16);
+  const b = parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function isHlsUrl(url){ return /\.m3u8(\?|#|$)/i.test(url || ""); }
+function isMediaUrl(url){ return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || "") || isHlsUrl(url); }
+
+function uid(){
+  return (crypto.randomUUID?.() || ("id_"+Date.now()+"_"+Math.random().toString(16).slice(2)));
+}
+
+const WORLD = document.getElementById("world");
+const INDEX_KEY = "tb_onebutton_multi_index_v1";
+
+function loadIndex(){
+  try{ return JSON.parse(localStorage.getItem(INDEX_KEY)) || []; }catch(_){ return []; }
+}
+function saveIndex(arr){
+  localStorage.setItem(INDEX_KEY, JSON.stringify(arr));
+}
+
+function defaultState(){
+  return {
+    accent:"#1f8bff",
+    accent2:"#4ac3ff",
+    desk:"rgba(10,14,32,.10)",
+
+    title:"Tech Blue • One Button",
+    sub:"Click/Enter: araña • Esc: cerrar",
+
+    playerUrl:"",
+    nowPlaying:{ name:"", url:"" },
+    queue:[],
+    autoNext:true,
+    pipOn:false,
+
+    cardLogoDataUrl:"",
+    cardLogoMode:"icon", // icon | bg
+    cardBgOpacity:0.35,
+
+    playlists:[ {name:"Demo", url:"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"} ],
+    links:[ {name:"Mi TV Station", url:"https://example.com"} ],
+     socials:[
+  {name:"YouTube", url:"https://youtube.com"},
+  {name:"home", url:"https://cuervo-123.github.io/mundo-vision-jp/"},
+  {name:"global tv station", url:"https://cuervo-123.github.io/tv4you/"}
+  ],
+    favs:[],
+
+    pos:{ x:null, y:null } // drag position (pixels)
+  };
+}
+
+function keyFor(id){ return "tb_onebutton_inst_" + id; }
+
+function loadState(id){
+  try{
+    const raw = JSON.parse(localStorage.getItem(keyFor(id)));
+    if(!raw) return defaultState();
+    const d = defaultState();
+    return {
+      ...d,
+      ...raw,
+      nowPlaying: { ...d.nowPlaying, ...(raw.nowPlaying||{}) },
+      pos: { ...d.pos, ...(raw.pos||{}) }
+    };
+  }catch(_){
+    return defaultState();
+  }
+}
+function saveState(id, state){
+  localStorage.setItem(keyFor(id), JSON.stringify(state));
+}
+
+/* ====== Template (per instance) ====== */
+function instanceHTML(id){
+  return `
+  <div class="tbInst" data-id="${esc(id)}">
+    <div class="core" role="button" tabindex="0">
+      <div class="left">
+        <div class="logo" title="Click para cambiar logo"></div>
+        <div class="txt">
+          <b class="tTitle">Tech Blue • One Button</b>
+          <small class="tSub">Click/Enter: araña • Esc: cerrar</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="chip btnPick" title="Clonar color del desktop">🎯</button>
+        <button class="chip btnToggle" title="Abrir/Cerrar araña">⚡</button>
+      </div>
+
+      <div class="spider">
+        <div class="leg" data-a="0"></div><div class="leg" data-a="45"></div><div class="leg" data-a="90"></div><div class="leg" data-a="135"></div>
+        <div class="leg" data-a="180"></div><div class="leg" data-a="225"></div><div class="leg" data-a="270"></div><div class="leg" data-a="315"></div>
+
+        <div class="node" data-a="0"   data-mod="player"><i>🎬</i><div class="nodeLabel">Player</div></div>
+        <div class="node" data-a="45"  data-mod="fav"><i>⭐</i><div class="nodeLabel">Fav</div></div>
+        <div class="node" data-a="90"  data-mod="m3u"><i>📺</i><div class="nodeLabel">M3U</div></div>
+        <div class="node" data-a="135" data-mod="links"><i>🔗</i><div class="nodeLabel">Links</div></div>
+        <div class="node" data-a="180" data-mod="look"><i>🎨</i><div class="nodeLabel">Look</div></div>
+        <div class="node" data-a="225" data-mod="social"><i>🌐</i><div class="nodeLabel">Social</div></div>
+        <div class="node" data-a="270" data-mod="ai"><i>🤖</i><div class="nodeLabel">AI</div></div>
+        <div class="node" data-a="315" data-mod="sys"><i>⚙️</i><div class="nodeLabel">Sys</div></div>
+      </div>
+    </div>
+
+    <div class="drawer" aria-hidden="true">
+      <div class="dTop">
+        <b class="dTitle">Módulo</b>
+        <button class="xbtn dClose">Cerrar ✕</button>
+      </div>
+      <div class="dBody"></div>
+    </div>
+
+    <div class="pip">
+      <div class="pipHead">
+        <div class="pipTitle">PiP • —</div>
+        <div class="pipBtns">
+          <button class="pipBtn pipUnmute">🔊</button>
+          <button class="pipBtn pipStop">⏹️</button>
+          <button class="pipBtn pipDock">📎</button>
+          <button class="pipBtn pipClose">✕</button>
+        </div>
+      </div>
+      <div class="pipBody">
+        <div class="playerWrap pipSlot"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ====== Create / Clone ====== */
+function createInstance({ id=null, state=null, place="center" }={}){
+  const instId = id || uid();
+  const st = state ? structuredClone(state) : loadState(instId);
+
+  // mount DOM
+  const wrap = document.createElement("div");
+  wrap.innerHTML = instanceHTML(instId);
+  const inst = wrap.firstElementChild;
+  WORLD.appendChild(inst);
+
+  // initial position
+  if(place === "center" && (st.pos.x==null || st.pos.y==null)){
+    // leave centered via transform
+  }else if(st.pos.x!=null && st.pos.y!=null){
+    inst.style.left = st.pos.x + "px";
+    inst.style.top  = st.pos.y + "px";
+    inst.style.transform = "translate(0,0)";
+  }
+
+  // init logic
+  initInstance(inst, instId, st);
+
+  // persist index
+  const idx = loadIndex();
+  if(!idx.includes(instId)){
+    idx.push(instId);
+    saveIndex(idx);
+  }
+
+  return instId;
+}
+
+function cloneInstance(fromId){
+  const fromState = loadState(fromId);
+  const newId = uid();
+  const st = structuredClone(fromState);
+
+  // shift position a bit so you see it
+  if(st.pos.x!=null && st.pos.y!=null){
+    st.pos.x += 30;
+    st.pos.y += 30;
+  }else{
+    st.pos = { x: 40, y: 40 };
+  }
+
+  saveState(newId, st);
+  createInstance({ id:newId, state:st, place:"manual" });
+  toast("Clonado ✅ (autónomo)");
+}
+
+/* =========================
+   INSTANCE LOGIC (scoped)
+========================= */
+function initInstance(inst, id, state){
+  // scoped query
+  const $ = (q, el=inst)=> el.querySelector(q);
+  const $$= (q, el=inst)=> Array.from(el.querySelectorAll(q));
+
+  // elements
+  const core   = $(".core");
+  const logo   = $(".logo");
+  const titleE = $(".tTitle");
+  const subE   = $(".tSub");
+
+  const drawer = $(".drawer");
+  const dTitle = $(".dTitle");
+  const dBody  = $(".dBody");
+
+  const pip    = $(".pip");
+  const pipHead= $(".pipHead");
+  const pipTitle= $(".pipTitle");
+  const pipSlot= $(".pipSlot");
+
+  // per instance HLS + video
+  let hlsInstance = null;
+  let videoEl = null;
+
+  // file input per instance (logo)
+  const cardFile = document.createElement("input");
+  cardFile.type="file"; cardFile.accept="image/*"; cardFile.style.display="none";
+  inst.appendChild(cardFile);
+
+  function applyTheme(){
+    // theme is global variables; but each instance can set its own look by using inline style vars on inst
+    inst.style.setProperty("--accent", state.accent);
+    inst.style.setProperty("--accent2", state.accent2);
+    document.documentElement.style.setProperty("--desk", state.desk); // background shared
+  }
+  function save(silent=false){
+    saveState(id, state);
+    applyTheme();
+    applyCardLogo();
+    applyText();
+    if(!silent) toast("Guardado ✅");
+  }
+
+  function applyText(){
+    titleE.textContent = state.title || "Tech Blue • One Button";
+    subE.textContent   = state.sub   || "Click/Enter: araña • Esc: cerrar";
+  }
+
+  // background overlay per instance
+  let bgOverlay = null;
+  function ensureBgOverlay(){
+    if(bgOverlay) return bgOverlay;
+    bgOverlay = document.createElement("div");
+    bgOverlay.className="coreBgOverlay";
+    core.insertBefore(bgOverlay, core.firstChild);
+    return bgOverlay;
+  }
+
+  function applyCardLogo(){
+    const img = state.cardLogoDataUrl || "";
+    const mode = state.cardLogoMode || "icon";
+    const op = typeof state.cardBgOpacity==="number" ? state.cardBgOpacity : 0.35;
+
+    // reset
+    logo.style.backgroundImage = "";
+    logo.style.background = "linear-gradient(135deg, var(--accent), var(--accent2))";
+    if(bgOverlay) bgOverlay.style.backgroundImage = "";
+
+    if(mode==="icon"){
+      if(img){
+        logo.style.backgroundImage = `url('${img}')`;
+        logo.style.backgroundSize = "cover";
+      }
+      return;
+    }
+
+    // bg mode
+    if(img){
+      const ov = ensureBgOverlay();
+      ov.style.backgroundImage = `url('${img}')`;
+      ov.style.opacity = String(op);
+    }
+  }
+
+  function fileToDataUrl(file){
+    return new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(String(r.result||""));
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+  }
+  function resizeImageDataUrl(dataUrl, maxSide=512){
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>{
+        const w=img.width,h=img.height;
+        const scale=Math.min(1, maxSide/Math.max(w,h));
+        const nw=Math.max(1, Math.round(w*scale));
+        const nh=Math.max(1, Math.round(h*scale));
+        const c=document.createElement("canvas");
+        c.width=nw; c.height=nh;
+        c.getContext("2d").drawImage(img,0,0,nw,nh);
+        try{ resolve(c.toDataURL("image/webp",0.86)); }
+        catch(_){ resolve(c.toDataURL("image/png")); }
+      };
+      img.onerror=reject;
+      img.src=dataUrl;
+    });
+  }
+  function openCardImagePicker(){
+    cardFile.value="";
+    cardFile.click();
+  }
+  cardFile.addEventListener("change", async ()=>{
+    const file = cardFile.files && cardFile.files[0];
+    if(!file) return;
+    const dataUrl = await fileToDataUrl(file);
+    try{ state.cardLogoDataUrl = await resizeImageDataUrl(dataUrl, 512); }
+    catch(_){ state.cardLogoDataUrl = dataUrl; }
+    save(true);
+    toast("Logo cargado ✅");
+    if(dTitle.textContent.includes("Look")) renderLook();
+  });
+  logo.addEventListener("click",(e)=>{ e.stopPropagation(); openCardImagePicker(); });
+
+  // ===== Drawer =====
+  function showDrawer(t){
+    dTitle.textContent=t;
+    drawer.classList.add("show");
+    drawer.setAttribute("aria-hidden","false");
+  }
+  function hideDrawer(){
+    drawer.classList.remove("show");
+    drawer.setAttribute("aria-hidden","true");
+  }
+  $(".dClose").addEventListener("click", hideDrawer);
+
+  // ===== Video/HLS =====
+  function destroyHls(){
+    if(hlsInstance){ try{ hlsInstance.destroy(); }catch(_){ } hlsInstance=null; }
+  }
+  function ensureVideo(){
+    if(videoEl) return videoEl;
+    videoEl = document.createElement("video");
+    videoEl.setAttribute("controls","");
+    videoEl.setAttribute("playsinline","");
+    videoEl.style.width="100%";
+    videoEl.style.height="auto";
+    videoEl.style.background="#000";
+    videoEl.addEventListener("ended", ()=>{ if(state.autoNext) playNextFromQueue(); });
+    return videoEl;
+  }
+  function waitForCanPlay(video, ms=2500){
+    return new Promise((resolve,reject)=>{
+      let done=false;
+      const t=setTimeout(()=>{ if(done) return; done=true; cleanup(); reject(new Error("timeout")); }, ms);
+      function cleanup(){
+        clearTimeout(t);
+        video.removeEventListener("canplay", on);
+        video.removeEventListener("loadedmetadata", on);
+      }
+      function on(){ if(done) return; done=true; cleanup(); resolve(); }
+      video.addEventListener("canplay", on, {once:true});
+      video.addEventListener("loadedmetadata", on, {once:true});
+    });
+  }
+
+  function updatePipTitle(){
+    const np=state.nowPlaying||{};
+    pipTitle.textContent="PiP • " + (np.name||"—");
+  }
+  function showPiP(){ pip.classList.add("show"); state.pipOn=true; save(true); updatePipTitle(); }
+  function hidePiP(){ pip.classList.remove("show"); state.pipOn=false; save(true); }
+
+  function dockToPiP(){
+    const v=ensureVideo();
+    pipSlot.innerHTML="";
+    pipSlot.appendChild(v);
+    showPiP();
+  }
+
+  function dockToDrawer(){
+    const slot = inst.querySelector("#dockSlot");
+    const v = ensureVideo();
+    if(!slot) return;
+    slot.innerHTML="";
+    slot.appendChild(v);
+    hidePiP();
+  }
+
+  async function playInline(url, name=""){
+    url=(url||"").trim();
+    if(!url) return toast("URL vacía");
+    state.nowPlaying={name:name||"Now Playing", url};
+    state.playerUrl=url;
+    save(true);
+    updatePipTitle();
+
+    const v=ensureVideo();
+    try{
+      destroyHls();
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+      v.muted=true; // start muted ✅
+
+      if(state.pipOn) dockToPiP();
+      // else it will be docked in drawer when player module opens
+
+      if(isHlsUrl(url)){
+        if(window.Hls && Hls.isSupported()){
+          hlsInstance = new Hls({ enableWorker:true, lowLatencyMode:true });
+          hlsInstance.loadSource(url);
+          hlsInstance.attachMedia(v);
+          await waitForCanPlay(v, 3000).catch(()=>{});
+          await v.play().catch(()=>{});
+        }else if(v.canPlayType("application/vnd.apple.mpegurl")){
+          v.src=url;
+          await waitForCanPlay(v, 3000).catch(()=>{});
+          await v.play().catch(()=>{});
+        }else{
+          toast("Este navegador no reproduce .m3u8 ❌");
+          return;
+        }
+      }else{
+        v.src=url;
+        await waitForCanPlay(v, 3000).catch(()=>{});
+        await v.play().catch(()=>{});
+      }
+
+      const nowName = inst.querySelector("#nowName");
+      const nowUrl  = inst.querySelector("#nowUrl");
+      if(nowName) nowName.textContent = state.nowPlaying.name || "Now Playing";
+      if(nowUrl)  nowUrl.textContent  = state.nowPlaying.url || "";
+      toast("Reproduciendo (muted) ▶️");
+    }catch(_){
+      toast("No se pudo reproducir ❌");
+    }
+  }
+  function stopInline(){
+    const v=ensureVideo();
+    destroyHls();
+    try{ v.pause(); }catch(_){}
+    try{ v.removeAttribute("src"); v.load(); }catch(_){}
+    toast("Stop ⏹️");
+  }
+
+  // ===== Queue/Favs =====
+  function addToQueue(item, mode="end"){
+    state.queue = state.queue || [];
+    const obj={...item, id: uid()};
+    if(mode==="next") state.queue.unshift(obj);
+    else state.queue.push(obj);
+    save(true);
+    toast(mode==="next" ? "Añadido Next ⏭️" : "Añadido a Queue ✅");
+  }
+  function playNextFromQueue(){
+    state.queue = state.queue || [];
+    if(!state.queue.length) return toast("Queue vacía");
+    const next = state.queue.shift();
+    save(true);
+    playInline(next.url, next.name||"Queue");
+    const qList = inst.querySelector("#qList");
+    if(qList) renderQueueSection();
+  }
+  function addFav(item){
+    state.favs = state.favs || [];
+    state.favs.unshift({ ...item, id: uid() });
+    save(true);
+  }
+
+  // ===== PiP controls =====
+  $(".pipClose").onclick=()=>hidePiP();
+  $(".pipDock").onclick=()=>{ dockToDrawer(); toast("Docked 📎"); };
+  $(".pipStop").onclick=()=>stopInline();
+  $(".pipUnmute").onclick=()=>{ const v=ensureVideo(); v.muted=false; v.volume=1; toast("Unmuted 🔊"); };
+
+  // drag pip window
+  let pipDrag={on:false,dx:0,dy:0};
+  pipHead.addEventListener("pointerdown",(e)=>{
+    if(e.target.closest("button")) return;
+    pipDrag.on=true;
+    const r=pip.getBoundingClientRect();
+    pipDrag.dx=e.clientX-r.left;
+    pipDrag.dy=e.clientY-r.top;
+    pipHead.setPointerCapture(e.pointerId);
+  });
+  pipHead.addEventListener("pointermove",(e)=>{
+    if(!pipDrag.on) return;
+    const x=e.clientX-pipDrag.dx;
+    const y=e.clientY-pipDrag.dy;
+    pip.style.left = Math.max(8, Math.min(innerWidth - pip.offsetWidth - 8, x)) + "px";
+    pip.style.top  = Math.max(8, Math.min(innerHeight - pip.offsetHeight - 8, y)) + "px";
+    pip.style.bottom="auto";
+  });
+  pipHead.addEventListener("pointerup",()=>pipDrag.on=false);
+  pipHead.addEventListener("pointercancel",()=>pipDrag.on=false);
+
+  // ===== Drag CORE (per instance) =====
+  let drag={on:false,dx:0,dy:0};
+  core.addEventListener("pointerdown",(e)=>{
+    // don’t drag when clicking buttons/nodes
+    if(e.target.closest("button") || e.target.closest(".node")) return;
+    drag.on=true;
+    core.classList.add("dragging");
+    const r = inst.getBoundingClientRect();
+    drag.dx = e.clientX - r.left;
+    drag.dy = e.clientY - r.top;
+    core.setPointerCapture(e.pointerId);
+  });
+  core.addEventListener("pointermove",(e)=>{
+    if(!drag.on) return;
+    const x = e.clientX - drag.dx;
+    const y = e.clientY - drag.dy;
+    inst.style.left = Math.max(8, Math.min(innerWidth - core.offsetWidth - 8, x)) + "px";
+    inst.style.top  = Math.max(8, Math.min(innerHeight - core.offsetHeight - 8, y)) + "px";
+    inst.style.transform = "translate(0,0)";
+  });
+  core.addEventListener("pointerup",()=>{
+    if(!drag.on) return;
+    drag.on=false;
+    core.classList.remove("dragging");
+    // save pos
+    const r = inst.getBoundingClientRect();
+    state.pos = { x: Math.round(r.left), y: Math.round(r.top) };
+    save(true);
+  });
+  core.addEventListener("pointercancel",()=>{ drag.on=false; core.classList.remove("dragging"); });
+
+  // ===== Spider open/close =====
+  $(".btnToggle").addEventListener("click",(e)=>{ e.stopPropagation(); core.classList.toggle("open"); });
+  core.addEventListener("click",(e)=>{
+    if(e.target.closest(".node") || e.target.closest("button")) return;
+    core.classList.toggle("open");
+  });
+
+  // ===== Desktop color picker =====
+  $(".btnPick").addEventListener("click", async (e)=>{
+    e.stopPropagation();
+    try{
+      if(!("EyeDropper" in window)){
+        toast("EyeDropper no disponible ❌");
+        return;
+      }
+      const eye=new EyeDropper();
+      const res=await eye.open();
+      const col=res.sRGBHex;
+      state.desk = hexToRgba(col, 0.12);
+      state.accent = col;
+      applyTheme(); save(true);
+      toast("Desktop color ✅ " + col);
+    }catch(_){ toast("Cancelado"); }
+  });
+
+  // ===== Modules =====
+  const titles = {
+    player:"🎬 Player + Queue + PiP",
+    fav:"⭐ Favorites + Queue",
+    m3u:"📺 M3U / Playlists",
+    links:"🔗 Links / Apps",
+    look:"🎨 Look + Card",
+    social:"🌐 Social",
+    ai:"🤖 AI",
+    sys:"⚙️ System"
+  };
+
+  function renderModule(mod){
+    dBody.innerHTML="";
+    showDrawer(titles[mod]||"Módulo");
+    if(mod==="player") renderPlayer();
+    if(mod==="fav") renderFavs();
+    if(mod==="m3u") renderM3U();
+    if(mod==="links") renderLinks();
+    if(mod==="look") renderLook();
+    if(mod==="social") renderSocial();
+    if(mod==="ai") renderAI();
+    if(mod==="sys") renderSys();
+  }
+
+  $$(".node").forEach(n=>{
+    n.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      core.classList.add("open");
+      renderModule(n.dataset.mod);
+    });
+  });
+
+  function playerCardHtml(){
+    const np=state.nowPlaying||{name:"",url:""};
+    const qn=(state.queue||[]).length;
+    const pipLabel = state.pipOn ? "📌 PiP ON" : "📌 PiP";
+    return `
+      <div class="card">
+        <h3>Inline Player</h3>
+        <p style="margin:0;font-size:12px;color:rgba(233,242,255,.9)"><b id="nowName">${esc(np.name||"—")}</b></p>
+        <p style="margin:6px 0 0 0;font-size:11px;color:var(--muted);word-break:break-all" id="nowUrl">${esc(np.url||"")}</p>
+
+        <div class="playerWrap" style="margin-top:10px">
+          <div id="dockSlot"></div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn bad" id="pStop">⏹️ Stop</button>
+          <button class="btn secondary" id="pUnmute">🔊 Unmute</button>
+          <button class="btn" id="pNext">⏭️ Next (${qn})</button>
+          <button class="btn" id="pPiP">${pipLabel}</button>
+        </div>
+        <p style="margin:10px 0 0 0;color:var(--muted);font-size:12px;">Play inicia <b>muted</b>.</p>
+      </div>
+    `;
+  }
+
+  function wirePlayerControls(){
+    // dock video into drawer slot if pipOff
+    const slot = inst.querySelector("#dockSlot");
+    if(slot && !state.pipOn){
+      slot.innerHTML="";
+      slot.appendChild(ensureVideo());
+    }else if(state.pipOn){
+      dockToPiP();
+    }
+
+    inst.querySelector("#pStop")?.addEventListener("click", stopInline);
+    inst.querySelector("#pUnmute")?.addEventListener("click", ()=>{
+      const v=ensureVideo(); v.muted=false; v.volume=1; toast("Unmuted 🔊");
+    });
+    inst.querySelector("#pNext")?.addEventListener("click", ()=>playNextFromQueue());
+    inst.querySelector("#pPiP")?.addEventListener("click", ()=>{
+      if(state.pipOn){
+        state.pipOn=false; save(true);
+        dockToDrawer();
+        toast("PiP OFF");
+      }else{
+        state.pipOn=true; save(true);
+        dockToPiP();
+        toast("PiP ON ✅");
+      }
+      const b=inst.querySelector("#pPiP");
+      if(b) b.textContent = state.pipOn ? "📌 PiP ON" : "📌 PiP";
+    });
+    updatePipTitle();
+  }
+
+  function renderQueueSection(){
+    const box = inst.querySelector("#qList");
+    if(!box) return;
+    box.innerHTML="";
+    (state.queue||[]).forEach((x,idx)=>{
+      const div=document.createElement("div");
+      div.className="item";
+      div.innerHTML=`
+        <div style="min-width:0">
+          <b style="font-size:12px">${esc(x.name||"Queue")}</b>
+          <small>${esc(x.url)}</small>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn good" data-play="${idx}">▶️</button>
+          <button class="btn bad" data-del="${idx}">🗑️</button>
+        </div>
+      `;
+      div.querySelector("[data-del]").onclick=()=>{
+        state.queue.splice(idx,1); save(true); renderQueueSection();
+      };
+      div.querySelector("[data-play]").onclick=()=>{
+        const item = state.queue.splice(idx,1)[0];
+        save(true);
+        playInline(item.url, item.name||"Queue");
+        renderQueueSection();
+      };
+      box.appendChild(div);
+    });
+    const pNext=inst.querySelector("#pNext");
+    if(pNext) pNext.textContent=`⏭️ Next (${(state.queue||[]).length})`;
+  }
+
+  function renderPlayer(){
+    dBody.innerHTML = `
+      ${playerCardHtml()}
+      <div class="card">
+        <h3>URL</h3>
+        <p>Pega (.m3u8/mp4). Play inicia muted. Puedes añadir a Queue o Favorites.</p>
+        <input id="pUrl" placeholder="https://.../stream.m3u8" value="${esc(state.playerUrl)}">
+        <input id="pName" style="margin-top:8px" placeholder="Nombre (opcional)">
+        <div class="row" style="margin-top:10px">
+          <button class="btn good" id="pPlay">▶️ Play</button>
+          <button class="btn" id="pQ">➕ Queue</button>
+          <button class="btn" id="pQN">⏭️ Next</button>
+          <button class="btn secondary" id="pFav">⭐ Fav</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Queue</h3>
+        <div class="row" style="margin-bottom:10px">
+          <button class="btn" id="qShuffle">🔀 Shuffle</button>
+          <button class="btn" id="qClear">🧹 Clear</button>
+          <button class="btn secondary" id="qAuto">${state.autoNext ? "✅ AutoNext" : "⛔ AutoNext"}</button>
+        </div>
+        <div class="list" id="qList"></div>
+      </div>
+    `;
+    wirePlayerControls();
+
+    inst.querySelector("#pPlay").onclick=()=>{
+      const url=(inst.querySelector("#pUrl").value||"").trim();
+      const name=(inst.querySelector("#pName").value||"").trim()||"Player";
+      playInline(url,name);
+    };
+    inst.querySelector("#pQ").onclick=()=>{
+      const url=(inst.querySelector("#pUrl").value||"").trim();
+      if(!url) return toast("Falta URL");
+      const name=(inst.querySelector("#pName").value||"").trim()||"Queue item";
+      addToQueue({name,url,type:isMediaUrl(url)?"media":"link"},"end");
+      renderQueueSection();
+    };
+    inst.querySelector("#pQN").onclick=()=>{
+      const url=(inst.querySelector("#pUrl").value||"").trim();
+      if(!url) return toast("Falta URL");
+      const name=(inst.querySelector("#pName").value||"").trim()||"Next item";
+      addToQueue({name,url,type:isMediaUrl(url)?"media":"link"},"next");
+      renderQueueSection();
+    };
+    inst.querySelector("#pFav").onclick=()=>{
+      const url=(inst.querySelector("#pUrl").value||"").trim();
+      if(!url) return toast("Falta URL");
+      const name=(inst.querySelector("#pName").value||"").trim()||"Favorite";
+      addFav({name,url,type:isMediaUrl(url)?"media":"link"});
+      toast("A Favorites ⭐");
+    };
+
+    inst.querySelector("#qShuffle").onclick=()=>{
+      const a=state.queue||[];
+      for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+      save(true); renderQueueSection(); toast("Queue shuffled 🔀");
+    };
+    inst.querySelector("#qClear").onclick=()=>{ state.queue=[]; save(true); renderQueueSection(); toast("Queue cleared 🧹"); };
+    inst.querySelector("#qAuto").onclick=()=>{
+      state.autoNext=!state.autoNext; save(true);
+      inst.querySelector("#qAuto").textContent = state.autoNext ? "✅ AutoNext" : "⛔ AutoNext";
+      toast(state.autoNext?"AutoNext ON ✅":"AutoNext OFF ⛔");
+    };
+
+    renderQueueSection();
+  }
+
+  function renderFavs(){
+    dBody.innerHTML = `
+      ${playerCardHtml()}
+      <div class="card">
+        <h3>Mis favoritos</h3>
+        <p>▶️ Play (muted), ➕ Queue, ⏭️ Next, 🗑️ Delete.</p>
+        <div class="list" id="fList"></div>
+      </div>
+      <div class="card">
+        <h3>Queue</h3>
+        <div class="list" id="qList"></div>
+      </div>
+    `;
+    wirePlayerControls();
+    const list=inst.querySelector("#fList");
+    list.innerHTML="";
+    (state.favs||[]).forEach((x,idx)=>{
+      const canPlay=isMediaUrl(x.url);
+      const div=document.createElement("div");
+      div.className="item";
+      div.innerHTML=`
+        <div style="min-width:0">
+          <b style="font-size:12px">${esc(x.name||"Fav")}</b>
+          <small>${esc(x.url)}</small>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          ${canPlay ? `<button class="btn good" data-play="${idx}">▶️</button>` : `<span class="tag">link</span>`}
+          <button class="btn bad" data-del="${idx}">🗑️</button>
+        </div>
+      `;
+      div.querySelector("[data-del]").onclick=()=>{ state.favs.splice(idx,1); save(true); renderFavs(); };
+      const pb=div.querySelector("[data-play]");
+      if(pb) pb.onclick=()=>playInline(x.url, x.name||"Favorite");
+      list.appendChild(div);
+    });
+    renderQueueSection();
+  }
+
+  function renderM3U(){
+    const lines=(state.playlists||[]).map(x=>x.url).join("\n");
+    dBody.innerHTML=`
+      ${playerCardHtml()}
+      <div class="card">
+        <h3>Playlists</h3>
+        <p>Pega URLs (1 por línea).</p>
+        <textarea id="mTxt">${esc(lines)}</textarea>
+        <div class="row" style="margin-top:10px"><button class="btn good" id="mSave">Guardar</button></div>
+      </div>
+      <div class="card"><h3>Guardadas</h3><div class="list" id="mList"></div></div>
+    `;
+    wirePlayerControls();
+
+    const list=inst.querySelector("#mList");
+    function draw(){
+      list.innerHTML="";
+      (state.playlists||[]).forEach((p,idx)=>{
+        const canPlay=isMediaUrl(p.url);
+        const div=document.createElement("div");
+        div.className="item";
+        div.innerHTML=`
+          <div style="min-width:0">
+            <b style="font-size:12px">${esc(p.name||("Playlist "+(idx+1)))}</b>
+            <small>${esc(p.url)}</small>
+          </div>
+          <div class="row" style="justify-content:flex-end">
+            ${canPlay?`<button class="btn good" data-play="${idx}">▶️</button>`:`<span class="tag">link</span>`}
+            <button class="btn bad" data-del="${idx}">🗑️</button>
+          </div>
+        `;
+        div.querySelector("[data-del]").onclick=()=>{ state.playlists.splice(idx,1); save(true); draw(); };
+        const pb=div.querySelector("[data-play]");
+        if(pb) pb.onclick=()=>playInline(p.url, p.name||"Playlist");
+        list.appendChild(div);
+      });
+    }
+    draw();
+
+    inst.querySelector("#mSave").onclick=()=>{
+      const raw=(inst.querySelector("#mTxt").value||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      state.playlists=raw.map((url,i)=>({name:`Playlist ${i+1}`, url}));
+      save(true); toast("Playlists guardadas ✅"); draw();
+    };
+  }
+
+  function renderLinks(){
+    dBody.innerHTML=`
+      ${playerCardHtml()}
+      <div class="card">
+        <h3>Links</h3>
+        <input id="lName" placeholder="Nombre">
+        <input id="lUrl" style="margin-top:8px" placeholder="URL (https://...)">
+        <div class="row" style="margin-top:10px">
+          <button class="btn good" id="lAdd">Agregar</button>
+          <button class="btn secondary" id="lSave">Guardar</button>
+        </div>
+      </div>
+      <div class="card"><h3>Guardados</h3><div class="list" id="lList"></div></div>
+    `;
+    wirePlayerControls();
+
+    const list=inst.querySelector("#lList");
+    const draw=()=>{
+      list.innerHTML="";
+      (state.links||[]).forEach((x,idx)=>{
+        const canPlay=isMediaUrl(x.url);
+        const div=document.createElement("div");
+        div.className="item";
+        div.innerHTML=`
+          <div style="min-width:0"><b style="font-size:12px">${esc(x.name||("Link "+(idx+1)))}</b><small>${esc(x.url)}</small></div>
+          <div class="row" style="justify-content:flex-end">
+            ${canPlay?`<button class="btn good" data-play="${idx}">▶️</button>`:`<span class="tag">app</span>`}
+            <button class="btn bad" data-del="${idx}">🗑️</button>
+          </div>
+        `;
+        div.querySelector("[data-del]").onclick=()=>{ state.links.splice(idx,1); save(true); draw(); };
+        const pb=div.querySelector("[data-play]");
+        if(pb) pb.onclick=()=>playInline(x.url, x.name||"Link");
+        list.appendChild(div);
+      });
+    };
+    draw();
+
+    inst.querySelector("#lAdd").onclick=()=>{
+      const name=(inst.querySelector("#lName").value||"").trim()||"Nuevo link";
+      const url =(inst.querySelector("#lUrl").value||"").trim();
+      if(!url) return toast("Falta URL");
+      state.links=state.links||[];
+      state.links.unshift({name,url});
+      save(true); draw(); toast("Agregado ✅");
+    };
+    inst.querySelector("#lSave").onclick=()=>save(false);
+  }
+
+  function renderLook(){
+    dBody.innerHTML=`
+      <div class="card">
+        <h3>Look</h3>
+        <div class="row">
+          <label style="font-size:12px;color:var(--muted)">Accent
+            <input id="a1" type="color" value="${esc(state.accent)}">
+          </label>
+          <label style="font-size:12px;color:var(--muted)">Accent2
+            <input id="a2" type="color" value="${esc(state.accent2)}">
+          </label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn good" id="apply">Aplicar</button>
+          <button class="btn secondary" id="saveLook">Guardar</button>
+          <button class="btn" id="pick">🎯 Pick</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Texto de la tarjeta</h3>
+        <input id="tt" placeholder="Título" value="${esc(state.title||"")}">
+        <input id="ts" style="margin-top:8px" placeholder="Subtítulo" value="${esc(state.sub||"")}">
+        <div class="row" style="margin-top:10px">
+          <button class="btn good" id="saveTxt">Guardar texto</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Card (Logo/Imagen)</h3>
+        <div class="row">
+          <button class="btn good" id="cardUpload">🖼️ Cargar imagen</button>
+          <button class="btn bad" id="cardClear">🗑️ Quitar</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn ${state.cardLogoMode==="icon"?"good":"secondary"}" id="modeIcon">🧩 Icon</button>
+          <button class="btn ${state.cardLogoMode==="bg"?"good":"secondary"}" id="modeBg">🖼️ Background</button>
+        </div>
+
+        <label style="display:block;margin-top:10px;font-size:12px;color:var(--muted)">
+          Opacidad del fondo: <span id="opVal">${Number(state.cardBgOpacity||0.35).toFixed(2)}</span>
+        </label>
+        <input id="bgOp" type="range" min="0.10" max="0.70" step="0.01" value="${esc(String(state.cardBgOpacity ?? 0.35))}">
+      </div>
+    `;
+    inst.querySelector("#apply").onclick=()=>{ state.accent=inst.querySelector("#a1").value; state.accent2=inst.querySelector("#a2").value; applyTheme(); toast("Aplicado ✨"); };
+    inst.querySelector("#saveLook").onclick=()=>{ state.accent=inst.querySelector("#a1").value; state.accent2=inst.querySelector("#a2").value; save(false); };
+    inst.querySelector("#pick").onclick=()=>inst.querySelector(".btnPick").click();
+
+    inst.querySelector("#saveTxt").onclick=()=>{
+      state.title=(inst.querySelector("#tt").value||"").trim()||"Tech Blue • One Button";
+      state.sub  =(inst.querySelector("#ts").value||"").trim()||"Click/Enter: araña • Esc: cerrar";
+      save(true);
+      toast("Texto guardado ✅");
+    };
+
+    inst.querySelector("#cardUpload").onclick=()=>openCardImagePicker();
+    inst.querySelector("#cardClear").onclick=()=>{ state.cardLogoDataUrl=""; save(true); toast("Logo removido ✅"); renderLook(); };
+
+    inst.querySelector("#modeIcon").onclick=()=>{ state.cardLogoMode="icon"; save(true); renderLook(); };
+    inst.querySelector("#modeBg").onclick=()=>{ state.cardLogoMode="bg"; save(true); renderLook(); };
+
+    const bgOp=inst.querySelector("#bgOp");
+    bgOp.oninput=()=>{
+      state.cardBgOpacity=Number(bgOp.value);
+      inst.querySelector("#opVal").textContent=Number(state.cardBgOpacity).toFixed(2);
+      save(true);
+    };
+  }
+
+  function renderSocial(){
+    dBody.innerHTML=`
+      <div class="card">
+        <h3>Social</h3>
+        <div class="list">
+          ${(state.socials||[]).map(s=>`
+            <div class="item">
+              <div style="min-width:0">
+                <b style="font-size:12px">${esc(s.name||"Social")}</b>
+                <small>${esc(s.url)}</small>
+              </div>
+              <div class="row">
+                <a class="btn secondary" href="${esc(s.url)}" target="_blank" rel="noopener">Abrir</a>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAI(){
+    dBody.innerHTML=`
+      <div class="card">
+        <h3>AI (placeholder)</h3>
+        <p>Slot listo para conectar API luego.</p>
+        <textarea placeholder="Prompt..."></textarea>
+      </div>
+    `;
+  }
+
+  function renderSys(){
+    dBody.innerHTML=`
+      <div class="card">
+        <h3>Instancia</h3>
+        <p style="color:var(--muted);font-size:12px;margin-top:0">ID: <b>${esc(id)}</b></p>
+        <div class="row">
+          <button class="btn good" id="cloneMe">🧬 Clone Button</button>
+          <button class="btn secondary" id="resetMe">♻️ Reset This</button>
+          <button class="btn bad" id="deleteMe">🗑️ Delete This</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Export</h3>
+        <div class="row">
+          <button class="btn" id="exp">Export JSON</button>
+        </div>
+        <textarea id="box" style="margin-top:10px" placeholder="JSON..."></textarea>
+      </div>
+    `;
+
+    inst.querySelector("#cloneMe").onclick=()=>cloneInstance(id);
+
+    inst.querySelector("#resetMe").onclick=()=>{
+      localStorage.removeItem(keyFor(id));
+      toast("Reset (recarga)"); setTimeout(()=>location.reload(), 600);
+    };
+
+    inst.querySelector("#deleteMe").onclick=()=>{
+      // remove storage
+      localStorage.removeItem(keyFor(id));
+      // remove from index
+      const idx=loadIndex().filter(x=>x!==id);
+      saveIndex(idx);
+      // remove DOM
+      inst.remove();
+      toast("Eliminado ✅");
+    };
+
+    inst.querySelector("#exp").onclick=()=>{
+      inst.querySelector("#box").value = JSON.stringify(state, null, 2);
+      inst.querySelector("#box").focus();
+      inst.querySelector("#box").select();
+      toast("Exportado ✅");
+    };
+  }
+
+  // global key handling: esc closes ONLY this instance if focused/open
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape"){
+      core.classList.remove("open");
+      hideDrawer();
+    }
+  });
+
+  // initial apply
+  applyTheme();
+  applyText();
+  applyCardLogo();
+
+  // restore pip
+  if(state.pipOn){ pip.classList.add("show"); updatePipTitle(); }
+}
+
+/* =========================
+   BOOT
+========================= */
+(function boot(){
+  const idx = loadIndex();
+  if(idx.length){
+    idx.forEach(id=>{
+      const st = loadState(id);
+      createInstance({ id, state: st, place:"manual" });
+    });
+    toast("Multi instances ✅");
+  }else{
+    // first instance
+    const id = uid();
+    const st = defaultState();
+    // start centered; no pos
+    saveState(id, st);
+    createInstance({ id, state: st, place:"center" });
+    toast("Primera instancia ✅");
+  }
+})();
+</script>
+
+</body>
+</html>
