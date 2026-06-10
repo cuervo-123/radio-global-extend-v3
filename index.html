@@ -315,15 +315,13 @@
 }
 
   /* ✅ LOGO MÁS PEQUEÑO (y con límite) */
-.cuervo-lava img{
-    width:160px;
-    max-width:35%;
-    opacity:.55;
-
-    filter:
-      drop-shadow(0 0 10px rgba(255,255,255,.15))
-      drop-shadow(0 0 25px rgba(31,139,255,.35));
-}
+ .cuervo-lava img{
+    width: min(420px, 78%);   /* ✅ más pequeño */
+    max-width: 520px;
+    height:auto;
+    opacity:1;
+    transform: translateY(2%);
+  }
   @keyframes cuervoBreath{ 0%,100%{ transform: scale(0.99); } 50%{ transform: scale(1.04); } }
 
   audio{ width:100%; margin-top:4px; filter:drop-shadow(0 0 10px rgba(0,0,0,0.9)); }
